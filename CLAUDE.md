@@ -24,7 +24,7 @@ src/components/ui/       Button (+ buttonClasses для Link), Card, ProgressBar
 src/components/mascot/   Mascot (реакции тела, PNG/SVG), MascotSvg, available-png-states.ts
 src/components/ui/Dialog шторка-модалка (выход из урока)
 src/components/map/      TopBar, PathMap (остров-подложка + тропинка), LessonNode (круглые узлы), LessonPopover,
-                         IslandHeader, PathTrail, IslandSparkles, MapBackdrop (фон: пятна, точки, облака)
+                         IslandHeader, PathTrail, IslandSparkles, MapBackdrop (фон: пятна и точечная сетка)
 src/components/lesson/   LessonScreen (гейт: гидрация, замок, номер захода) → LessonRun (прогон урока),
                          LessonHeader, LessonFooter (Проверить / плашка), ExerciseView (switch по type),
                          exercises/*, OutOfHearts, LessonSummary (+ конфетти), InterviewCard
