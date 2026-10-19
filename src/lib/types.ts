@@ -8,7 +8,8 @@ export type MascotState =
 
 export type PointerName = string;
 
-export type HighlightKind = "compare" | "write" | "skip" | "done";
+/** window — текущее окно l..r (скользящее окно). */
+export type HighlightKind = "compare" | "write" | "skip" | "window" | "done";
 
 /** Ряд ячеек с указателями и подсветкой. */
 export interface VizRow {
@@ -65,6 +66,12 @@ export type Exercise =
       lines: string[];
       /** Другие верные порядки (индексы строк lines), если независимые строки можно поменять местами. */
       accept?: number[][];
+      /**
+       * Неподвижный контекст для длинных решений: шапка и хвост функции показываются как есть,
+       * собирать нужно только lines (ядро). Решение целиком — before + lines + after.
+       */
+      before?: string[];
+      after?: string[];
       explanation: string;
     }
   | {

@@ -1,11 +1,18 @@
 "use client";
 
-import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
-import { useEffect, useId } from "react";
+import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "framer-motion";
+import { useEffect, useId, useRef } from "react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import type { VizRow, VizStep } from "@/lib/types";
-import { cellLook, cellSize, formatCell, pointersByCell, type CellLook } from "@/lib/viz/steps";
+import {
+  cellLook,
+  cellSize,
+  focusIndex,
+  formatCell,
+  pointersByCell,
+  type CellLook,
+} from "@/lib/viz/steps";
 import { useStepPlayer } from "./useStepPlayer";
 
 // Цвета закреплены за привычными именами указателей, остальные берут из запасного списка.
@@ -30,6 +37,7 @@ const FILL_STYLES: Record<NonNullable<CellLook["fill"]> | "none", string> = {
   none: "border-border bg-surface text-ink",
   compare: "border-xp bg-xp-soft text-ink",
   write: "border-success bg-success-soft text-success-ink",
+  window: "border-primary/50 bg-primary-soft text-ink",
   skip: "border-border bg-disabled text-disabled-ink",
 };
 
@@ -79,6 +87,9 @@ function Pointer({ id, name, color }: { id: string; name: string; color: string 
     </motion.div>
   );
 }
+
+/** Зазор между ячейками (gap-1), px. */
+const CELL_GAP = 4;
 
 /** Высота стопки указателей под ячейкой, px. */
 const POINTER_HEIGHT = 30;
@@ -143,12 +154,28 @@ interface ArrayVisualizerProps {
 export function ArrayVisualizer({ steps, onComplete }: ArrayVisualizerProps) {
   const groupId = useId();
   const player = useStepPlayer(steps.length);
+  const scroller = useRef<HTMLDivElement>(null);
+  const reducedMotion = useReducedMotion();
   const step = steps[player.index] ?? steps[0];
 
   const atEnd = player.index === player.last;
   useEffect(() => {
     if (atEnd) onComplete?.();
   }, [atEnd, onComplete]);
+
+  // Размер ячейки один на всю анимацию: по самому длинному ряду среди всех шагов.
+  const size = cellSize(
+    Math.max(...steps.flatMap((s) => [s.array.length, s.secondary?.array.length ?? 0])),
+  );
+
+  // Длинный массив не влезает в экран — держим текущие указатели в центре видимой части.
+  const focus = step ? focusIndex(step) : null;
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el || focus === null || el.scrollWidth <= el.clientWidth) return;
+    const left = focus * (size + CELL_GAP) + size / 2 - el.clientWidth / 2;
+    el.scrollTo({ left: Math.max(0, left), behavior: reducedMotion ? "auto" : "smooth" });
+  }, [focus, size, reducedMotion]);
 
   if (!step) return null;
 
@@ -163,7 +190,6 @@ export function ArrayVisualizer({ steps, onComplete }: ArrayVisualizerProps) {
       stack: maxStack(steps.flatMap((s) => (s.secondary ? [s.secondary] : []))),
     });
   }
-  const size = cellSize(Math.max(...rows.map((r) => r.row.array.length)));
   const pointerOrder = [
     ...Object.keys(steps[0]?.pointers ?? {}),
     ...Object.keys(steps[0]?.secondary?.pointers ?? {}),
@@ -173,7 +199,12 @@ export function ArrayVisualizer({ steps, onComplete }: ArrayVisualizerProps) {
   return (
     <div className="space-y-4">
       {/* Массив скроллится сам, страница вбок не едет. */}
-      <div className="-mx-1 overflow-x-auto px-1 pt-1 pb-2" role="img" aria-label={step.note}>
+      <div
+        ref={scroller}
+        className="-mx-1 overflow-x-auto px-1 pt-1 pb-2"
+        role="img"
+        aria-label={step.note}
+      >
         <LayoutGroup id={groupId}>
           <div className="mx-auto w-max space-y-2">
             {rows.map(({ key, label, row, stack }) => (

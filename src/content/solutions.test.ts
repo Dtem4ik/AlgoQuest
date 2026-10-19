@@ -68,6 +68,12 @@ const triplets = (nums: number[], expected: number[][]): Case => {
   return { args: [nums], check: (result) => normalize(result) === normalize(expected) };
 };
 
+/** Набор индексов без учёта порядка. */
+const indices = (args: unknown[], expected: number[]): Case => ({
+  args,
+  check: (result) => same([...(result as number[])].sort((a, b) => a - b), [...expected].sort((a, b) => a - b)),
+});
+
 const palindrome = (s: string, expected: boolean): Case => ({
   args: [s],
   check: (result) => result === expected,
@@ -173,6 +179,43 @@ const CASES: Record<string, LessonCases> = {
       triplets([-4, -1, -1, -1, 0, 1, 2, 2], [[-4, 2, 2], [-1, -1, 2], [-1, 0, 1]]),
     ],
   },
+  "sw-209": {
+    cases: [
+      returns([7, [2, 3, 1, 2, 4, 3]], 2),
+      returns([4, [1, 4, 4]], 1),
+      returns([11, [1, 1, 1, 1, 1, 1, 1, 1]], 0),
+      returns([11, [1, 2, 3, 4, 5]], 3),
+      returns([15, [1, 2, 3, 4, 5]], 5),
+    ],
+  },
+  "sw-3": {
+    cases: [
+      returns(["abcabcbb"], 3),
+      returns(["bbbbb"], 1),
+      returns(["pwwkew"], 3),
+      returns([""], 0),
+      returns(["a"], 1),
+      returns(["dvdf"], 3),
+    ],
+  },
+  "sw-30": {
+    cases: [
+      indices(["barfoothefoobarman", ["foo", "bar"]], [0, 9]),
+      indices(["wordgoodgoodgoodbestword", ["word", "good", "best", "word"]], []),
+      indices(["barfoofoobarthefoobarman", ["bar", "foo", "the"]], [6, 9, 12]),
+      indices(["aaaaaa", ["aa", "aa"]], [0, 1, 2]),
+      indices(["ababaab", ["ab", "ba", "ba"]], [1]),
+    ],
+  },
+  "sw-76": {
+    cases: [
+      returns(["ADOBECODEBANC", "ABC"], "BANC"),
+      returns(["a", "a"], "a"),
+      returns(["a", "aa"], ""),
+      returns(["ab", "b"], "b"),
+      returns(["bba", "ab"], "ba"),
+    ],
+  },
   "cd-169": {
     cases: [
       returns([[3, 2, 3]], 3),
@@ -210,7 +253,8 @@ const MAX_ITERATIONS = 100_000;
 function guardLoops(source: string): string {
   return source
     .replace(/while \(/g, "while (__guard() && ")
-    .replace(/for \(([^;]*);([^;]*);/g, "for ($1; __guard() && ($2);");
+    // Только классический for (init; cond; step) в пределах строки; for...of не трогаем.
+    .replace(/for \(((?:let|var) [^;\n]*);([^;\n]*);/g, "for ($1; __guard() && ($2);");
 }
 
 function compile(source: string, helpers: string[] = []): Solution {
@@ -248,7 +292,8 @@ describe.each(lessons.map((lesson) => [lesson.id, lesson] as const))("%s", (id, 
   it.each(of("order-lines").map((e, i) => [i, e] as const))(
     "order-lines #%i: every accepted order is a working solution",
     (_, e) => {
-      for (const solution of acceptedSolutions(e.lines, e.accept)) {
+      for (const core of acceptedSolutions(e.lines, e.accept)) {
+        const solution = [...(e.before ?? []), ...core, ...(e.after ?? [])];
         expect(passes(solution.join("\n"), spec)).toBe(true);
       }
     },

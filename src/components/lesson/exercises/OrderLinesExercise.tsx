@@ -106,6 +106,19 @@ function announcements(ids: string[], texts: string[]): Announcements {
   };
 }
 
+/** Неподвижная часть решения: видна для контекста, но не перетаскивается. */
+function FixedLines({ lines }: { lines: string[] }) {
+  return (
+    <div className="-my-2 rounded-xl border-2 border-dashed border-border px-3 py-2 text-[12px] leading-5 opacity-70">
+      {lines.map((line, i) => (
+        <div key={i}>
+          <CodeLine code={line} wrap />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 interface OrderLinesExerciseProps {
   exercise: Extract<Exercise, { type: "order-lines" }>;
   /** Индексы исходных строк в текущем порядке. */
@@ -122,8 +135,11 @@ export function OrderLinesExercise({ exercise, order, onReorder, checked }: Orde
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
+  const before = exercise.before ?? [];
+  const after = exercise.after ?? [];
   const texts = order.map((index) => exercise.lines[index]?.trim() ?? "");
-  const levels = indentLevels(texts);
+  // Отступы ядра считаются с учётом неподвижной шапки над ним.
+  const levels = indentLevels([...before, ...texts]).slice(before.length);
   const ids = order.map((index) => `line-${index}`);
   // Сверяем с тем верным порядком, который собрал пользователь (их может быть несколько).
   const matched = matchSolution(exercise.lines, exercise.accept, order);
@@ -138,10 +154,15 @@ export function OrderLinesExercise({ exercise, order, onReorder, checked }: Orde
 
   return (
     <div className="space-y-5">
-      <h2 className="text-2xl leading-tight font-black">Собери решение</h2>
+      <h2 className="text-2xl leading-tight font-black">
+        {before.length > 0 ? "Собери ядро решения" : "Собери решение"}
+      </h2>
       <p className="-mt-3 text-sm font-bold text-ink-muted">
         Перетаскивай строки. Отступы расставятся сами.
+        {before.length > 0 && " Серые строки уже на месте."}
       </p>
+
+      {before.length > 0 && <FixedLines lines={before} />}
 
       <DndContext
         sensors={sensors}
@@ -174,10 +195,12 @@ export function OrderLinesExercise({ exercise, order, onReorder, checked }: Orde
         </SortableContext>
       </DndContext>
 
+      {after.length > 0 && <FixedLines lines={after} />}
+
       {checked && !matched && (
         <div className="space-y-2">
           <p className="font-extrabold text-success-ink">Правильный порядок:</p>
-          <CodeBlock code={exercise.lines.join("\n")} />
+          <CodeBlock code={[...before, ...exercise.lines, ...after].join("\n")} />
         </div>
       )}
     </div>

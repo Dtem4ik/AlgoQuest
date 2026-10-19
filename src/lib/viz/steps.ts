@@ -17,7 +17,7 @@ export interface CellLook {
 }
 
 // Если ячейка попала в несколько списков, важнее то, что произошло с ней на этом шаге.
-const FILL_PRIORITY = ["write", "compare", "skip"] as const;
+const FILL_PRIORITY = ["write", "compare", "window", "skip"] as const;
 
 export function cellLook(step: VizRow, index: number): CellLook {
   const fill = FILL_PRIORITY.find((kind) => step.highlight?.[kind]?.includes(index)) ?? null;
@@ -33,4 +33,14 @@ export function cellSize(length: number, available = 343, gap = 4): number {
 /** Пробел в строках иначе не виден. */
 export function formatCell(value: number | string): string {
   return value === " " ? "␣" : String(value);
+}
+
+/**
+ * Куда прокрутить длинный массив: середина между крайними видимыми указателями
+ * (для окна — между l и r). null — указателей нет, крутить не нужно.
+ */
+export function focusIndex(step: VizRow): number | null {
+  const visible = Object.values(step.pointers).filter((i) => i >= 0);
+  if (visible.length === 0) return null;
+  return (Math.min(...visible) + Math.max(...visible)) / 2;
 }

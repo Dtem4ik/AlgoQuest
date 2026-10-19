@@ -22,7 +22,7 @@ const rowShape = {
   array: z.array(z.union([z.number(), z.string()])).min(1),
   pointers: z.record(z.string(), z.number().int()),
   highlight: z
-    .object({ compare: indexList, write: indexList, skip: indexList, done: indexList })
+    .object({ compare: indexList, write: indexList, skip: indexList, window: indexList, done: indexList })
     .partial()
     .optional(),
 };
@@ -120,6 +120,8 @@ const exerciseSchema: z.ZodType<Exercise> = z.discriminatedUnion("type", [
       type: z.literal("order-lines"),
       lines: z.array(z.string().min(1)).min(2),
       accept: z.array(z.array(z.number().int().nonnegative())).optional(),
+      before: z.array(z.string().min(1)).optional(),
+      after: z.array(z.string().min(1)).optional(),
       explanation: text,
     })
     .refine(
@@ -135,8 +137,9 @@ const exerciseSchema: z.ZodType<Exercise> = z.discriminatedUnion("type", [
     // Движок пересчитывает отступы сам, поэтому в данных они должны совпадать со скобками.
     .refine(
       (e) => {
-        const levels = indentLevels(e.lines);
-        return e.lines.every((line, i) => line === " ".repeat(2 * (levels[i] ?? 0)) + line.trim());
+        const full = [...(e.before ?? []), ...e.lines, ...(e.after ?? [])];
+        const levels = indentLevels(full);
+        return full.every((line, i) => line === " ".repeat(2 * (levels[i] ?? 0)) + line.trim());
       },
       { message: "order-lines indentation must be 2 spaces per brace level" },
     ),

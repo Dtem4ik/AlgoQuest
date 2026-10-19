@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { VizStep } from "@/lib/types";
-import { cellLook, cellSize, formatCell, pointersByCell } from "./steps";
+import { cellLook, cellSize, focusIndex, formatCell, pointersByCell } from "./steps";
 
 const step: VizStep = {
   array: [1, 2, 3, 4],
@@ -24,10 +24,26 @@ describe("viz steps", () => {
     expect(cellLook(step, 1)).toEqual({ fill: null, done: false });
   });
 
+  it("puts the window under the step's own highlight", () => {
+    const windowStep: VizStep = {
+      array: [1, 2, 3],
+      pointers: {},
+      highlight: { window: [0, 1, 2], compare: [2] },
+      note: "n",
+    };
+    expect(cellLook(windowStep, 0).fill).toBe("window");
+    expect(cellLook(windowStep, 2).fill).toBe("compare");
+  });
+
   it("sizes cells to fit, between 28 and 48px", () => {
     expect(cellSize(5)).toBe(48);
     expect(cellSize(8)).toBe(39);
     expect(cellSize(30)).toBe(28);
+  });
+
+  it("focuses between the outermost visible pointers", () => {
+    expect(focusIndex(step)).toBe(2.5);
+    expect(focusIndex({ array: [1], pointers: { i: -1 } })).toBeNull();
   });
 
   it("shows spaces visibly", () => {
