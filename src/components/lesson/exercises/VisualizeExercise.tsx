@@ -11,7 +11,7 @@ interface VisualizeExerciseProps {
 export function VisualizeExercise({ exercise, onComplete }: VisualizeExerciseProps) {
   return (
     <div className="space-y-5">
-      <h2 className="font-mono text-base leading-snug font-bold break-words">{exercise.title}</h2>
+      <h2 className="font-mono text-base leading-snug font-bold break-words whitespace-pre-wrap">{exercise.title}</h2>
       <ArrayVisualizer steps={exercise.steps} onComplete={onComplete} />
     </div>
   );

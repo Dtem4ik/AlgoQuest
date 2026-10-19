@@ -6,7 +6,7 @@ import { cn } from "@/lib/cn";
 export type StatKind = "streak" | "xp" | "hearts";
 
 const config: Record<StatKind, { icon: string; label: string; color: string }> = {
-  streak: { icon: "🔥", label: "Стрик", color: "text-xp-shade" },
+  streak: { icon: "🔥", label: "Стрик", color: "text-xp-ink" },
   xp: { icon: "⚡", label: "XP", color: "text-primary" },
   hearts: { icon: "❤️", label: "Сердечки", color: "text-error" },
 };

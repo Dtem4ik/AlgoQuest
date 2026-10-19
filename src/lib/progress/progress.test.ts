@@ -40,4 +40,19 @@ describe("applyLessonResult", () => {
     expect(progress.activity["2026-10-19"]).toBe(22);
     expect(progress.lessons["tp-27"]).toEqual({ completed: true, perfect: true, bestAccuracy: 100 });
   });
+
+  it("reports the streak only for the first lesson of the day", () => {
+    const first = applyLessonResult(
+      INITIAL_PROGRESS,
+      { lessonId: "tp-27", baseXp: 15, accuracy: 100, perfect: true },
+      now,
+    );
+    expect(first).toMatchObject({ streak: 1, streakExtended: true });
+    const second = applyLessonResult(
+      first.progress,
+      { lessonId: "tp-26", baseXp: 15, accuracy: 100, perfect: true },
+      now,
+    );
+    expect(second).toMatchObject({ streak: 1, streakExtended: false });
+  });
 });

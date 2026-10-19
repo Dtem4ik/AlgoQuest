@@ -40,21 +40,32 @@ export function xpForLesson(baseXp: number, alreadyCompleted: boolean): number {
   return alreadyCompleted ? Math.floor(baseXp / 2) : baseXp;
 }
 
+export interface LessonReward {
+  xpEarned: number;
+  /** Стрик после урока. */
+  streak: number;
+  /** Первый урок за сегодня — стрик вырос (или начался). */
+  streakExtended: boolean;
+}
+
 export function applyLessonResult(
   progress: Progress,
   result: LessonResult,
   now: Date,
-): { progress: Progress; xpEarned: number } {
+): { progress: Progress } & LessonReward {
   const prev = progress.lessons[result.lessonId];
   const xpEarned = xpForLesson(result.baseXp, prev?.completed ?? false);
   const today = toDayKey(now);
+  const streak = applyActivity(progress.streak, today);
 
   return {
     xpEarned,
+    streak: streak.current,
+    streakExtended: progress.streak.lastDay !== today,
     progress: {
       ...progress,
       xp: progress.xp + xpEarned,
-      streak: applyActivity(progress.streak, today),
+      streak,
       activity: {
         ...progress.activity,
         [today]: (progress.activity[today] ?? 0) + xpEarned,

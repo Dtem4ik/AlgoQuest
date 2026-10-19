@@ -72,7 +72,7 @@ export function LessonFooter({ mode, onCheck, onContinue }: LessonFooterProps) {
             <Shell
               className={cn(
                 "border-transparent",
-                mode.correct ? "bg-success-soft text-success-shade" : "bg-error-soft text-error-shade",
+                mode.correct ? "bg-success-soft text-success-ink" : "bg-error-soft text-error-ink",
               )}
             >
               <div role="status" className="max-h-[40dvh] space-y-2 overflow-y-auto">

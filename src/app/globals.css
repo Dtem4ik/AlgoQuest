@@ -16,6 +16,10 @@
   --xp: #fbbf24;
   --xp-shade: #d97706;
   --xp-soft: #fef3c7;
+  /* Текст на цветных плашках: shade — подложка кнопок, ink — читаемый текст. */
+  --success-ink: #15803d;
+  --error-ink: #be123c;
+  --xp-ink: #b45309;
 
   --bg: #f7f7fb;
   --surface: #ffffff;
@@ -43,6 +47,9 @@
   --success-soft: #12341f;
   --error-soft: #3d1621;
   --xp-soft: #3b2e0c;
+  --success-ink: #4ade80;
+  --error-ink: #fb7185;
+  --xp-ink: #fbbf24;
 
   --bg: #13111f;
   --surface: #1e1b2e;
@@ -76,6 +83,9 @@
   --color-xp: var(--xp);
   --color-xp-shade: var(--xp-shade);
   --color-xp-soft: var(--xp-soft);
+  --color-success-ink: var(--success-ink);
+  --color-error-ink: var(--error-ink);
+  --color-xp-ink: var(--xp-ink);
 
   --color-bg: var(--bg);
   --color-surface: var(--surface);

@@ -32,8 +32,8 @@ export function FillBlankExercise({ exercise, selected, onSelect, checked }: Fil
         className={cn(
           "inline-block rounded-md border-2 px-1.5 font-bold",
           !checked && "border-primary bg-primary-soft text-primary",
-          checked && isCorrect && "border-success bg-success-soft text-success-shade",
-          checked && !isCorrect && "border-error bg-error-soft text-error-shade",
+          checked && isCorrect && "border-success bg-success-soft text-success-ink",
+          checked && !isCorrect && "border-error bg-error-soft text-error-ink",
         )}
       >
         {filled}
@@ -67,7 +67,7 @@ export function FillBlankExercise({ exercise, selected, onSelect, checked }: Fil
               className={cn(
                 "rounded-xl border-2 border-b-4 border-border bg-surface px-4 py-2 font-mono text-[15px] font-bold",
                 "active:translate-y-0.5 active:border-b-2 disabled:opacity-50",
-                checked && i === exercise.correct && "border-success text-success-shade opacity-100!",
+                checked && i === exercise.correct && "border-success text-success-ink opacity-100!",
               )}
             >
               {option}

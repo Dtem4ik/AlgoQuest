@@ -8,8 +8,8 @@ import { xpForLesson } from "@/lib/progress/progress";
 import type { Lesson } from "@/lib/types";
 
 const DIFFICULTY_COLORS: Record<Lesson["leetcode"]["difficulty"], string> = {
-  Easy: "text-success-shade",
-  Medium: "text-xp-shade",
+  Easy: "text-success-ink",
+  Medium: "text-xp-ink",
   Hard: "text-error",
 };
 

@@ -21,8 +21,8 @@ export function optionTone(
 const TONES: Record<OptionTone, string> = {
   idle: "border-border bg-surface text-ink hover:bg-bg",
   selected: "border-primary bg-primary-soft text-primary",
-  correct: "border-success bg-success-soft text-success-shade",
-  wrong: "border-error bg-error-soft text-error-shade",
+  correct: "border-success bg-success-soft text-success-ink",
+  wrong: "border-error bg-error-soft text-error-ink",
   dimmed: "border-border bg-surface text-ink opacity-50",
 };
 

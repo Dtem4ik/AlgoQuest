@@ -44,7 +44,7 @@ export function PathMap({ islands, upcoming }: PathMapProps) {
   const sleepy = hydrated && today !== null && isStreakBroken(streak, today);
 
   return (
-    <div className="relative mx-auto w-full max-w-md space-y-10 px-4 pt-6 pb-24">
+    <div className="relative mx-auto w-full max-w-md space-y-10 px-4 pt-6 pb-32">
       {openId && (
         <button
           type="button"

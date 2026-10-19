@@ -72,7 +72,7 @@ export function LessonRun({ lesson, onRetry, onLeave }: LessonRunProps) {
     setTurn((t) => t + 1);
     if (next.phase === "finished") {
       const score = lessonScore(lesson, next);
-      const xpEarned = completeLesson({
+      const reward = completeLesson({
         lessonId: lesson.id,
         baseXp: lesson.xp,
         accuracy: score.accuracy,
@@ -80,7 +80,7 @@ export function LessonRun({ lesson, onRetry, onLeave }: LessonRunProps) {
       });
       setOutcome({
         ...score,
-        xpEarned,
+        ...reward,
         durationMs: Date.now() - startedAt,
         mascotLine: pickMascotLine("celebrate"),
       });

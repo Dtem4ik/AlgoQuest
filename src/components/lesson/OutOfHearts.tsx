@@ -26,7 +26,7 @@ export function OutOfHearts({ onRetry, onLeave }: OutOfHeartsProps) {
         </p>
       </div>
 
-      <p className="rounded-2xl bg-error-soft px-4 py-2 text-lg font-extrabold text-error-shade tabular-nums">
+      <p className="rounded-2xl bg-error-soft px-4 py-2 text-lg font-extrabold text-error-ink tabular-nums">
         {canRetry
           ? `❤️ × ${hearts?.hearts}: можно продолжать`
           : hearts?.msToNext != null

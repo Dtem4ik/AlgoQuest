@@ -29,7 +29,7 @@ function pointerColor(name: string, order: string[]): string {
 const FILL_STYLES: Record<NonNullable<CellLook["fill"]> | "none", string> = {
   none: "border-border bg-surface text-ink",
   compare: "border-xp bg-xp-soft text-ink",
-  write: "border-success bg-success-soft text-success-shade",
+  write: "border-success bg-success-soft text-success-ink",
   skip: "border-border bg-disabled text-disabled-ink",
 };
 

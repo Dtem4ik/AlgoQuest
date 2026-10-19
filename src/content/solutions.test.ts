@@ -53,6 +53,12 @@ const merge = (nums1: number[], m: number, nums2: number[], n: number): Case => 
     same(mutated, [...nums1.slice(0, m), ...nums2].sort((a, b) => a - b)),
 });
 
+/** Сравнение результата с ожидаемым значением. */
+const returns = (args: unknown[], expected: unknown): Case => ({
+  args,
+  check: (result) => same(result, expected),
+});
+
 const palindrome = (s: string, expected: boolean): Case => ({
   args: [s],
   check: (result) => result === expected,
@@ -122,6 +128,35 @@ const CASES: Record<string, LessonCases> = {
       rotate([1, 2], 3),
       rotate([1, 2, 3], 0),
       rotate([1], 5),
+    ],
+  },
+  "cd-169": {
+    cases: [
+      returns([[3, 2, 3]], 3),
+      returns([[2, 2, 1, 1, 1, 2, 2]], 2),
+      returns([[1, 3, 3]], 3),
+      returns([[7]], 7),
+      returns([[6, 5, 5]], 5),
+    ],
+  },
+  "cd-13": {
+    cases: [
+      returns(["III"], 3),
+      returns(["IV"], 4),
+      returns(["LVIII"], 58),
+      returns(["MCMXCIV"], 1994),
+      returns(["XIV"], 14),
+      returns(["II"], 2),
+    ],
+  },
+  "cd-58": {
+    cases: [
+      returns(["Hello World"], 5),
+      returns(["   fly me   to   the moon  "], 4),
+      returns(["luffy is still joyboy"], 6),
+      returns(["a"], 1),
+      returns(["a "], 1),
+      returns(["go fly  "], 3),
     ],
   },
 };

@@ -1,17 +1,20 @@
 "use client";
 
 import confetti from "canvas-confetti";
-import { useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { useEffect } from "react";
 import { Mascot } from "@/components/mascot/Mascot";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
-import { formatDuration, leetcodeUrl } from "@/lib/format";
+import { formatDuration, leetcodeUrl, streakLabel } from "@/lib/format";
 import type { Lesson } from "@/lib/types";
 import { InterviewCard } from "./InterviewCard";
 
 export interface LessonOutcome {
   xpEarned: number;
+  streak: number;
+  /** Первый урок за сегодня — показываем плашку стрика. */
+  streakExtended: boolean;
   accuracy: number;
   perfect: boolean;
   durationMs: number;
@@ -72,6 +75,17 @@ export function LessonSummary({ lesson, outcome, onContinue }: LessonSummaryProp
           <StatTile label="Точность" value={`${outcome.accuracy}%`} className="border-success bg-success" />
           <StatTile label="Время" value={formatDuration(outcome.durationMs)} className="border-primary bg-primary" />
         </div>
+
+        {outcome.streakExtended && (
+          <motion.p
+            initial={{ scale: 0.6, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 400, damping: 18, delay: 0.3 }}
+            className="mx-auto w-fit rounded-2xl bg-xp-soft px-5 py-2 text-lg font-black text-xp-ink"
+          >
+            🔥 {streakLabel(outcome.streak)}
+          </motion.p>
+        )}
 
         <InterviewCard notes={lesson.interview} />
 

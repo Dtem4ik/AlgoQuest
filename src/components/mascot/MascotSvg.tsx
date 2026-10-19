@@ -196,7 +196,7 @@ function Arms({ state, animated }: PartProps & { state: MascotState }) {
 function Extras({ state, animated }: PartProps & { state: MascotState }) {
   if (state === "sleepy") {
     return (
-      <g fill={BODY_SHADE} fontFamily="var(--font-nunito), sans-serif" fontWeight={900}>
+      <g fill={BODY_LIGHT} fontFamily="var(--font-nunito), sans-serif" fontWeight={900}>
         {[0, 1, 2].map((i) => (
           <motion.text
             key={i}

@@ -8,6 +8,7 @@ import {
   applyLessonResult,
   INITIAL_PROGRESS,
   type LessonResult,
+  type LessonReward,
   type Progress,
 } from "@/lib/progress/progress";
 
@@ -17,8 +18,8 @@ interface ProgressActions {
   loseHeart: (now?: number) => void;
   /** Полный запас сердечек (для разработки). */
   refillHearts: (now?: number) => void;
-  /** Записывает итог урока и возвращает начисленный XP. */
-  completeLesson: (result: LessonResult, now?: Date) => number;
+  /** Записывает итог урока и возвращает награду: XP и стрик. */
+  completeLesson: (result: LessonResult, now?: Date) => LessonReward;
   reset: () => void;
 }
 
@@ -47,9 +48,9 @@ export const useProgressStore = create<ProgressStore>()(
       refillHearts: (now = Date.now()) => set(refillHearts(now)),
 
       completeLesson: (result, now = new Date()) => {
-        const { progress, xpEarned } = applyLessonResult(pickProgress(get()), result, now);
+        const { progress, ...reward } = applyLessonResult(pickProgress(get()), result, now);
         set(progress);
-        return xpEarned;
+        return reward;
       },
 
       reset: () => set(INITIAL_PROGRESS),

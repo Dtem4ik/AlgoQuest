@@ -176,7 +176,7 @@ export function OrderLinesExercise({ exercise, order, onReorder, checked }: Orde
 
       {checked && !matched && (
         <div className="space-y-2">
-          <p className="font-extrabold text-success-shade">Правильный порядок:</p>
+          <p className="font-extrabold text-success-ink">Правильный порядок:</p>
           <CodeBlock code={exercise.lines.join("\n")} />
         </div>
       )}

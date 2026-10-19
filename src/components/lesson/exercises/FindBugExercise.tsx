@@ -59,7 +59,7 @@ export function FindBugExercise({ exercise, selected, onSelect, checked }: FindB
                   transition={{ duration: 0.2 }}
                   className="flex items-center border-l-4 border-success bg-success-soft py-1 pr-4"
                 >
-                  <span className="w-9 shrink-0 pr-3 text-right font-mono font-bold text-success-shade select-none">
+                  <span className="w-9 shrink-0 pr-3 text-right font-mono font-bold text-success-ink select-none">
                     +
                   </span>
                   <CodeLine code={fixed} />

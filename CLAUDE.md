@@ -28,6 +28,9 @@ src/components/map/      TopBar, PathMap (остров-подложка + тро
 src/components/lesson/   LessonScreen (гейт: гидрация, замок, номер захода) → LessonRun (прогон урока),
                          LessonHeader, LessonFooter (Проверить / плашка), ExerciseView (switch по type),
                          exercises/*, OutOfHearts, LessonSummary (+ конфетти), InterviewCard
+src/components/nav/      TabBar — нижние вкладки «Карта / Профиль» (как в Duolingo)
+src/components/profile/  ProfileScreen, ActivityCalendar (heatmap как на GitHub), ThemePicker
+src/components/theme/    ThemeController (класс .dark по настройке и ОС)
 src/components/dev/      витрина /dev/ui
 src/content/islands/*.ts контент, по файлу на остров; content/index.ts валидирует zod и отдаёт getLesson/lessonIds
 src/content/*.ts         реплики маскота, подсказки к упражнениям
@@ -39,6 +42,8 @@ src/lib/viz/steps.ts     хелперы визуализатора: указат
 src/components/viz/      ArrayVisualizer (ячейки, указатели-стрелки через layoutId, Назад/Авто/Шаг), useStepPlayer
 src/lib/progress/        чистые функции: dates, hearts, streak, progress (+ тесты)
 src/store/progress.ts    Zustand persist (ключ `algoquest-progress`), useProgressHydrated
+src/store/settings.ts    тема (ключ `algoquest-settings`); сброс прогресса её не трогает
+src/lib/theme.ts         ключ настроек и скрипт в <head>, который ставит .dark до отрисовки
 src/hooks/               useToday (день), useNow (часы раз в секунду), useHearts (сердечки с регеном)
 ```
 
@@ -61,10 +66,12 @@ src/hooks/               useToday (день), useNow (часы раз в сек�
 - **Обработчики передаём в JSX-пропсы напрямую.** Если положить колбэк в объект, React Compiler (`react-hooks/purity`) сочтёт, что он может вызываться при рендере, и запретит в нём `Date.now()`.
 - **Гидрация.** Данные из store показываем после `useProgressHydrated()`, до этого рендерим плейсхолдер (`StatBadge value={null}`).
 - **zod-схема только проверяет** (`refine`), но не трансформирует (`.trim()` и т.п. запрещены): иначе ломаются отступы в коде. Это закреплено тестом.
-- **Цвета** — только через токены (`bg-primary`, `text-ink-muted`, `bg-surface`...). Значения в `:root` и `.dark` в `globals.css`. Тёмная тема включается классом `.dark` на `<html>` (переключатель появится на Этапе 3).
+- **Цвета** — только через токены (`bg-primary`, `text-ink-muted`, `bg-surface`...). Текст на цветных плашках — `text-success-ink` / `text-error-ink` / `text-xp-ink`, а `*-shade` только для подложек кнопок: в тёмной теме shade тёмный и как текст не читается. Значения в `:root` и `.dark` в `globals.css`. Тёмная тема — класс `.dark` на `<html>`: до отрисовки его ставит скрипт из `lib/theme.ts`, дальше ведёт `ThemeController`.
 - **Объёмная кнопка**: `shadow-[0_4px_0_var(--ledge)]` + `active:translate-y-1 active:shadow-none`. Цвет подложки задаётся переменной `--ledge` в варианте.
 - **Анимации**: Framer Motion, 150–300ms, пружины. `MotionConfig reducedMotion="user"` стоит в `app/providers.tsx`. Бесконечные циклы дополнительно выключаем через `useReducedMotion()`.
 - **Маскот**: PNG берётся, только если состояние есть в `AVAILABLE_PNG_STATES`, без сканирования файлов. Реплики лежат в `content/mascot-lines.ts`, `pickMascotLine` вызывается в обработчиках.
 - **Прогресс**: XP за урок полный в первый раз и половина (floor) за повтор. Сердечки: максимум 5, +1 каждые 5 минут (`HEART_REGEN_MINUTES`); таймер стартует при потере первого сердечка из полного запаса.
 - UI на русском, код и термины на английском. В коде лигатуры отключены (`!==` видно как есть).
 - Mobile-first: всё проверяем на ширине 375px, без горизонтального скролла.
+- **Сборка не ходит в сеть за ассетами.** В `opengraph-image.tsx` нет эмодзи: `next/og` подгружает их с CDN во время сборки.
+- **Ветки:** `main` — продакшен на Vercel, рабочие ветки собираются как preview.
