@@ -11,18 +11,32 @@ export function lessonStatuses(
   islands: Island[],
   records: Record<string, LessonRecord>,
 ): Record<string, LessonStatus> {
+  return statusesInOrder(
+    islands.flatMap((island) => island.lessons.map((lesson) => lesson.id)),
+    records,
+  );
+}
+
+/**
+ * То же по упорядоченному списку id — для страницы урока, которой не нужен весь контент.
+ * Пройденный урок открыт всегда, даже если перед ним позже добавили новые задачи.
+ */
+export function statusesInOrder(
+  lessonIds: readonly string[],
+  records: Record<string, LessonRecord>,
+): Record<string, LessonStatus> {
   const statuses: Record<string, LessonStatus> = {};
   let frontierReached = false;
 
-  for (const lesson of islands.flatMap((island) => island.lessons)) {
-    const record = records[lesson.id];
+  for (const id of lessonIds) {
+    const record = records[id];
     if (record?.completed) {
-      statuses[lesson.id] = record.perfect ? "perfect" : "completed";
+      statuses[id] = record.perfect ? "perfect" : "completed";
     } else if (!frontierReached) {
-      statuses[lesson.id] = "available";
+      statuses[id] = "available";
       frontierReached = true;
     } else {
-      statuses[lesson.id] = "locked";
+      statuses[id] = "locked";
     }
   }
   return statuses;

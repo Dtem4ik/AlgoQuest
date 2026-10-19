@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Mascot } from "@/components/mascot/Mascot";
 import { buttonClasses } from "@/components/ui/Button";
+import { statusesInOrder } from "@/lib/engine/unlock";
 import type { Lesson } from "@/lib/types";
 import { useLessonVisits } from "@/store/lesson-visits";
 import { useProgressHydrated, useProgressStore } from "@/store/progress";
@@ -12,14 +13,15 @@ import { LessonRun } from "./LessonRun";
 
 interface LessonScreenProps {
   lesson: Lesson;
-  /** Предыдущий урок на карте; пока он не пройден, этот закрыт. */
-  prevLessonId: string | null;
+  /** Все уроки по порядку карты: по ним считается, открыт ли этот урок. */
+  lessonIds: string[];
 }
 
-export function LessonScreen({ lesson, prevLessonId }: LessonScreenProps) {
+export function LessonScreen({ lesson, lessonIds }: LessonScreenProps) {
   const router = useRouter();
   const hydrated = useProgressHydrated();
-  const unlocked = useProgressStore((s) => !prevLessonId || s.lessons[prevLessonId]?.completed === true);
+  const records = useProgressStore((s) => s.lessons);
+  const unlocked = statusesInOrder(lessonIds, records)[lesson.id] !== "locked";
   // Смена ключа монтирует новый прогон урока: при новом заходе с карты или «Повторить урок».
   const visit = useLessonVisits((s) => s.visits[lesson.id] ?? 0);
   const [retry, setRetry] = useState(0);

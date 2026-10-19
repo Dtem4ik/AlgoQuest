@@ -17,6 +17,5 @@ export default async function LessonPage({ params }: PageProps<"/lesson/[id]">) 
   const lesson = getLesson(id);
   if (!lesson) notFound();
 
-  const position = lessonIds.indexOf(id);
-  return <LessonScreen lesson={lesson} prevLessonId={lessonIds[position - 1] ?? null} />;
+  return <LessonScreen lesson={lesson} lessonIds={lessonIds} />;
 }

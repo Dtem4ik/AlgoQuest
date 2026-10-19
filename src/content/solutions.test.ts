@@ -59,6 +59,15 @@ const returns = (args: unknown[], expected: unknown): Case => ({
   check: (result) => same(result, expected),
 });
 
+/** Набор троек без учёта порядка — ни троек в ответе, ни чисел внутри тройки. */
+const triplets = (nums: number[], expected: number[][]): Case => {
+  const normalize = (list: unknown) =>
+    JSON.stringify(
+      (list as number[][]).map((t) => [...t].sort((a, b) => a - b)).sort((a, b) => String(a).localeCompare(String(b))),
+    );
+  return { args: [nums], check: (result) => normalize(result) === normalize(expected) };
+};
+
 const palindrome = (s: string, expected: boolean): Case => ({
   args: [s],
   check: (result) => result === expected,
@@ -128,6 +137,40 @@ const CASES: Record<string, LessonCases> = {
       rotate([1, 2], 3),
       rotate([1, 2, 3], 0),
       rotate([1], 5),
+    ],
+  },
+  "tp-392": {
+    cases: [
+      returns(["abc", "ahbgdc"], true),
+      returns(["axc", "ahbgdc"], false),
+      returns(["", "ahbgdc"], true),
+      returns(["b", "abc"], true),
+      returns(["acb", "abc"], false),
+    ],
+  },
+  "tp-167": {
+    cases: [
+      returns([[2, 7, 11, 15], 9], [1, 2]),
+      returns([[2, 3, 4], 6], [1, 3]),
+      returns([[-1, 0], -1], [1, 2]),
+      returns([[1, 3, 4, 5, 7, 10, 11], 9], [3, 4]),
+    ],
+  },
+  "tp-11": {
+    cases: [
+      returns([[1, 8, 6, 2, 5, 4, 8, 3, 7]], 49),
+      returns([[1, 1]], 1),
+      returns([[4, 3, 2, 1, 4]], 16),
+      returns([[2, 3, 4, 5, 18, 17, 6]], 17),
+    ],
+  },
+  "tp-15": {
+    cases: [
+      triplets([-1, 0, 1, 2, -1, -4], [[-1, -1, 2], [-1, 0, 1]]),
+      triplets([0, 1, 1], []),
+      triplets([0, 0, 0, 0], [[0, 0, 0]]),
+      triplets([-2, 0, 1, 1, 2], [[-2, 0, 2], [-2, 1, 1]]),
+      triplets([-4, -1, -1, -1, 0, 1, 2, 2], [[-4, 2, 2], [-1, -1, 2], [-1, 0, 1]]),
     ],
   },
   "cd-169": {

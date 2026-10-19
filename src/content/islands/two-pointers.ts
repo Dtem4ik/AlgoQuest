@@ -701,16 +701,419 @@ export const lesson189: Lesson = {
   ],
 };
 
+export const lesson392: Lesson = {
+  id: "tp-392",
+  title: "Is Subsequence",
+  leetcode: { id: 392, slug: "is-subsequence", difficulty: "Easy" },
+  xp: 10,
+  interview: {
+    brute:
+      "Для каждого символа s искать его в остатке t через indexOf и обрезать t. Тот же O(n), но с лишними срезами строк. Перебор всех подпоследовательностей t — вообще экспонента.",
+    optimal:
+      "Два указателя по двум строкам: j идёт по t всегда, i по s — только при совпадении. Если i дошёл до конца s — это подпоследовательность. Follow-up: если s приходят потоком, заранее сохранить позиции букв t и искать бинарным поиском.",
+    time: "O(n) — один проход по t",
+    space: "O(1) — два индекса",
+  },
+  exercises: [
+    {
+      type: "theory",
+      title: "Два указателя по двум строкам",
+      body: "Подпоследовательность — символы s встречаются в t в том же порядке, но не обязательно подряд. Ставим i на s и j на t. j идёт по t всегда, а i сдвигается, только когда s[i] совпал с t[j]. Это тот же read/write, только «пишет» указатель по другой строке.",
+      mascot: "thinking",
+    },
+    {
+      type: "visualize",
+      title: 's = "abc", t = "ahbgdc"',
+      steps: [
+        { array: ["a", "h", "b", "g", "d", "c"], pointers: { j: 0 }, label: "t", secondary: { label: "s", array: ["a", "b", "c"], pointers: { i: 0 } }, vars: { i: 0 }, note: "i ищет символы s по порядку, j идёт по t всегда" },
+        { array: ["a", "h", "b", "g", "d", "c"], pointers: { j: 0 }, label: "t", highlight: { write: [0] }, secondary: { label: "s", array: ["a", "b", "c"], pointers: { i: 0 }, highlight: { write: [0] } }, vars: { i: 1 }, note: "t[0] = 'a' = s[0] → нашли, i++" },
+        { array: ["a", "h", "b", "g", "d", "c"], pointers: { j: 1 }, label: "t", highlight: { skip: [1] }, secondary: { label: "s", array: ["a", "b", "c"], pointers: { i: 1 }, highlight: { done: [0], compare: [1] } }, vars: { i: 1 }, note: "t[1] = 'h' ≠ s[1] = 'b' → j++" },
+        { array: ["a", "h", "b", "g", "d", "c"], pointers: { j: 2 }, label: "t", highlight: { write: [2] }, secondary: { label: "s", array: ["a", "b", "c"], pointers: { i: 1 }, highlight: { done: [0], write: [1] } }, vars: { i: 2 }, note: "t[2] = 'b' = s[1] → нашли, i++" },
+        { array: ["a", "h", "b", "g", "d", "c"], pointers: { j: 3 }, label: "t", highlight: { skip: [3] }, secondary: { label: "s", array: ["a", "b", "c"], pointers: { i: 2 }, highlight: { done: [0, 1], compare: [2] } }, vars: { i: 2 }, note: "t[3] = 'g' ≠ s[2] = 'c' → j++" },
+        { array: ["a", "h", "b", "g", "d", "c"], pointers: { j: 4 }, label: "t", highlight: { skip: [4] }, secondary: { label: "s", array: ["a", "b", "c"], pointers: { i: 2 }, highlight: { done: [0, 1], compare: [2] } }, vars: { i: 2 }, note: "t[4] = 'd' ≠ s[2] = 'c' → j++" },
+        { array: ["a", "h", "b", "g", "d", "c"], pointers: { j: 5 }, label: "t", highlight: { write: [5] }, secondary: { label: "s", array: ["a", "b", "c"], pointers: { i: -1 }, highlight: { done: [0, 1, 2] } }, vars: { i: 3 }, note: "t[5] = 'c' = s[2] → нашли, i++. i дошёл до конца s → true" },
+      ],
+    },
+    {
+      type: "choice",
+      question: "Какой указатель сдвигается на каждом шаге цикла?",
+      options: ["j по строке t", "i по строке s", "Оба", "Ни один — только при совпадении"],
+      correct: 0,
+      explanation: "j читает t целиком, а i продвигается по s только при совпадении — как k в Remove Element.",
+    },
+    {
+      type: "find-bug",
+      code: [
+        "function isSubsequence(s, t) {",
+        "  let i = 0;",
+        "  for (let j = 0; j < t.length && i < s.length; j++) {",
+        "    if (s[i] === t[j]) i++;",
+        "  }",
+        "  return i === t.length;",
+        "}",
+      ],
+      bugLine: 5,
+      fixed: "  return i === s.length;",
+      explanation:
+        "i — это сколько символов s мы нашли. Подпоследовательность есть, когда найдены все символы s, то есть i === s.length. Сравнение с t.length почти всегда даст false.",
+    },
+    {
+      type: "order-lines",
+      lines: [
+        "function isSubsequence(s, t) {",
+        "  let i = 0;",
+        "  for (let j = 0; j < t.length && i < s.length; j++) {",
+        "    if (s[i] === t[j]) i++;",
+        "  }",
+        "  return i === s.length;",
+        "}",
+      ],
+      explanation: "O(n) по времени, O(1) по памяти. Условие i < s.length в цикле — ранний выход, когда всё уже найдено.",
+    },
+  ],
+};
+
+export const lesson167: Lesson = {
+  id: "tp-167",
+  title: "Two Sum II - Input Array Is Sorted",
+  leetcode: { id: 167, slug: "two-sum-ii-input-array-is-sorted", difficulty: "Medium" },
+  xp: 15,
+  interview: {
+    brute:
+      "Перебрать все пары двумя циклами — O(n²). Или Map, как в обычном Two Sum: O(n) времени, но O(n) памяти, хотя массив уже отсортирован.",
+    optimal:
+      "Указатели навстречу: l в начале, r в конце. Сумма меньше цели — l++ (нужно больше), больше — r-- (нужно меньше). Отсортированность гарантирует, что нужную пару мы не перепрыгнем. Ответ в индексах с 1.",
+    time: "O(n) — указатели проходят массив один раз",
+    space: "O(1) — два указателя",
+  },
+  exercises: [
+    {
+      type: "theory",
+      title: "Сумма подсказывает, кого двигать",
+      body: "Массив отсортирован. Ставим l в начало, r в конец и смотрим на сумму. Меньше цели — сдвигаем l вправо: числа там больше. Больше цели — сдвигаем r влево: числа там меньше. Каждый шаг отсекает число, которое ни с кем в паре дать цель уже не может.",
+      mascot: "thinking",
+    },
+    {
+      type: "visualize",
+      title: "numbers = [1,3,4,5,7,10,11], target = 9",
+      steps: [
+        { array: [1, 3, 4, 5, 7, 10, 11], pointers: { l: 0, r: 6 }, vars: { target: 9 }, note: "l в начале, r в конце. Ищем сумму 9" },
+        { array: [1, 3, 4, 5, 7, 10, 11], pointers: { l: 0, r: 6 }, highlight: { compare: [0, 6] }, vars: { sum: 12, target: 9 }, note: "1 + 11 = 12 > 9 → нужно меньше, r--" },
+        { array: [1, 3, 4, 5, 7, 10, 11], pointers: { l: 0, r: 5 }, highlight: { compare: [0, 5] }, vars: { sum: 11, target: 9 }, note: "1 + 10 = 11 > 9 → нужно меньше, r--" },
+        { array: [1, 3, 4, 5, 7, 10, 11], pointers: { l: 0, r: 4 }, highlight: { compare: [0, 4] }, vars: { sum: 8, target: 9 }, note: "1 + 7 = 8 < 9 → нужно больше, l++" },
+        { array: [1, 3, 4, 5, 7, 10, 11], pointers: { l: 1, r: 4 }, highlight: { compare: [1, 4] }, vars: { sum: 10, target: 9 }, note: "3 + 7 = 10 > 9 → нужно меньше, r--" },
+        { array: [1, 3, 4, 5, 7, 10, 11], pointers: { l: 1, r: 3 }, highlight: { compare: [1, 3] }, vars: { sum: 8, target: 9 }, note: "3 + 5 = 8 < 9 → нужно больше, l++" },
+        { array: [1, 3, 4, 5, 7, 10, 11], pointers: { l: 2, r: 3 }, highlight: { done: [2, 3] }, vars: { sum: 9, target: 9 }, note: "4 + 5 = 9 → нашли! Ответ [3, 4] (индексы с 1)" },
+      ],
+    },
+    {
+      type: "choice",
+      question: "numbers[l] + numbers[r] меньше target. Что делаем?",
+      options: [
+        "l++ — справа числа больше, сумма вырастет",
+        "r-- — слева числа меньше",
+        "Сдвигаем оба указателя",
+        "Начинаем заново с l = 0",
+      ],
+      correct: 0,
+      explanation:
+        "Чтобы сумма выросла, нужно число побольше — оно правее l. Сдвиг r сделал бы сумму ещё меньше.",
+    },
+    {
+      type: "find-bug",
+      code: [
+        "function twoSum(numbers, target) {",
+        "  let l = 0, r = numbers.length - 1;",
+        "  while (l < r) {",
+        "    const sum = numbers[l] + numbers[r];",
+        "    if (sum === target) return [l, r];",
+        "    if (sum < target) l++;",
+        "    else r--;",
+        "  }",
+        "  return [];",
+        "}",
+      ],
+      bugLine: 4,
+      fixed: "    if (sum === target) return [l + 1, r + 1];",
+      explanation:
+        "В этой задаче индексы считаются с 1 (1-indexed). Внимательно читай условие на собесе: такие детали проверяют специально.",
+    },
+    {
+      type: "order-lines",
+      lines: [
+        "function twoSum(numbers, target) {",
+        "  let l = 0, r = numbers.length - 1;",
+        "  while (l < r) {",
+        "    const sum = numbers[l] + numbers[r];",
+        "    if (sum === target) return [l + 1, r + 1];",
+        "    if (sum < target) l++;",
+        "    else r--;",
+        "  }",
+        "  return [];",
+        "}",
+      ],
+      explanation: "O(n) по времени, O(1) по памяти. Проверка на равенство идёт первой — иначе сдвинем указатель мимо ответа.",
+    },
+  ],
+};
+
+export const lesson11: Lesson = {
+  id: "tp-11",
+  title: "Container With Most Water",
+  leetcode: { id: 11, slug: "container-with-most-water", difficulty: "Medium" },
+  xp: 20,
+  interview: {
+    brute: "Перебрать все пары стенок и посчитать площадь каждой — O(n²).",
+    optimal:
+      "Указатели на краях: площадь = min(height[l], height[r]) × (r - l). Каждый раз двигаем более низкую стенку: площадь ограничена ею, и сдвиг высокой только уменьшит ширину без шанса на выигрыш. Запоминаем максимум.",
+    time: "O(n) — один проход навстречу",
+    space: "O(1) — два указателя и максимум",
+  },
+  exercises: [
+    {
+      type: "theory",
+      title: "Двигаем низкую стенку",
+      body: "Вода в ёмкости между стенками l и r: высота — меньшая из двух, ширина — r - l. Начинаем с самых крайних стенок: шире не бывает. Потом сдвигаем более низкую. Почему не высокую? Площадь всё равно упирается в низкую стенку, а ширина уменьшится — выиграть такой ход не может.",
+      mascot: "thinking",
+    },
+    {
+      type: "visualize",
+      title: "height = [1,8,6,2,5,4,8,3,7]",
+      steps: [
+        { array: [1, 8, 6, 2, 5, 4, 8, 3, 7], pointers: { l: 0, r: 8 }, vars: { best: 0 }, note: "Стенки по краям: самая широкая «ёмкость»" },
+        { array: [1, 8, 6, 2, 5, 4, 8, 3, 7], pointers: { l: 0, r: 8 }, highlight: { compare: [0, 8] }, vars: { area: 8, best: 8 }, note: "min(1, 7) × 8 = 8. Левая ниже → l++" },
+        { array: [1, 8, 6, 2, 5, 4, 8, 3, 7], pointers: { l: 1, r: 8 }, highlight: { compare: [1, 8] }, vars: { area: 49, best: 49 }, note: "min(8, 7) × 7 = 49. Правая не выше → r--" },
+        { array: [1, 8, 6, 2, 5, 4, 8, 3, 7], pointers: { l: 1, r: 7 }, highlight: { compare: [1, 7] }, vars: { area: 18, best: 49 }, note: "min(8, 3) × 6 = 18. Правая не выше → r--" },
+        { array: [1, 8, 6, 2, 5, 4, 8, 3, 7], pointers: { l: 1, r: 6 }, highlight: { compare: [1, 6] }, vars: { area: 40, best: 49 }, note: "min(8, 8) × 5 = 40. Правая не выше → r--" },
+        { array: [1, 8, 6, 2, 5, 4, 8, 3, 7], pointers: { l: 1, r: 5 }, highlight: { compare: [1, 5] }, vars: { area: 16, best: 49 }, note: "min(8, 4) × 4 = 16. Правая не выше → r--" },
+        { array: [1, 8, 6, 2, 5, 4, 8, 3, 7], pointers: { l: 1, r: 4 }, highlight: { compare: [1, 4] }, vars: { area: 15, best: 49 }, note: "min(8, 5) × 3 = 15. Правая не выше → r--" },
+        { array: [1, 8, 6, 2, 5, 4, 8, 3, 7], pointers: { l: 1, r: 3 }, highlight: { compare: [1, 3] }, vars: { area: 4, best: 49 }, note: "min(8, 2) × 2 = 4. Правая не выше → r--" },
+        { array: [1, 8, 6, 2, 5, 4, 8, 3, 7], pointers: { l: 1, r: 2 }, highlight: { compare: [1, 2] }, vars: { area: 6, best: 49 }, note: "min(8, 6) × 1 = 6. Правая не выше → r--. Указатели сошлись, ответ 49" },
+      ],
+    },
+    {
+      type: "fill-blank",
+      code: "const area = Math.___(height[l], height[r]) * (r - l);",
+      options: ["min", "max", "abs", "floor"],
+      correct: 0,
+      explanation: "Вода переливается через более низкую стенку, поэтому высота ёмкости — минимум из двух.",
+    },
+    {
+      type: "choice",
+      question: "height[l] = 3, height[r] = 8. Какой указатель сдвигаем?",
+      options: [
+        "l — левая стенка ниже, она ограничивает площадь",
+        "r — правая стенка выше",
+        "Оба сразу",
+        "Любой, разницы нет",
+      ],
+      correct: 0,
+      explanation:
+        "Пока стоит стенка высотой 3, площадь не больше 3 × ширина. Шанс на большую площадь есть, только если заменить именно низкую стенку.",
+    },
+    {
+      type: "predict-output",
+      code: "maxArea(height)",
+      input: "height = [1, 1]",
+      options: ["1", "2", "0", "Ошибка"],
+      correct: 0,
+      explanation: "Одна пара стенок: min(1, 1) × (1 - 0) = 1.",
+    },
+    {
+      type: "find-bug",
+      code: [
+        "function maxArea(height) {",
+        "  let l = 0, r = height.length - 1, best = 0;",
+        "  while (l < r) {",
+        "    const area = Math.min(height[l], height[r]) * (r - l);",
+        "    best = Math.max(best, area);",
+        "    if (height[l] > height[r]) l++;",
+        "    else r--;",
+        "  }",
+        "  return best;",
+        "}",
+      ],
+      bugLine: 5,
+      fixed: "    if (height[l] < height[r]) l++;",
+      explanation:
+        "Здесь сдвигается более высокая стенка — ровно то, что выиграть не может. На [1, 8, 6, 2, 5, 4, 8, 3, 7] такой код вернёт 8 вместо 49.",
+    },
+    {
+      type: "order-lines",
+      lines: [
+        "function maxArea(height) {",
+        "  let l = 0, r = height.length - 1, best = 0;",
+        "  while (l < r) {",
+        "    const area = Math.min(height[l], height[r]) * (r - l);",
+        "    best = Math.max(best, area);",
+        "    if (height[l] < height[r]) l++;",
+        "    else r--;",
+        "  }",
+        "  return best;",
+        "}",
+      ],
+      // Максимум можно обновить и после сдвига: area уже посчитана.
+      accept: [[0, 1, 2, 3, 5, 6, 4, 7, 8, 9]],
+      explanation: "O(n) по времени, O(1) по памяти.",
+    },
+  ],
+};
+
+export const lesson15: Lesson = {
+  id: "tp-15",
+  title: "3Sum",
+  leetcode: { id: 15, slug: "3sum", difficulty: "Medium" },
+  xp: 20,
+  interview: {
+    brute:
+      "Три вложенных цикла по всем тройкам и Set, чтобы убрать повторы, — O(n³).",
+    optimal:
+      "Сортируем, фиксируем nums[i] и ищем пару с суммой -nums[i] двумя указателями навстречу — это Two Sum II внутри цикла. Повторы отсекаем: пропускаем одинаковые nums[i], а после найденной тройки — одинаковые nums[l] и nums[r].",
+    time: "O(n²) — n раз по проходу навстречу",
+    space: "O(1) дополнительно, не считая ответа",
+  },
+  exercises: [
+    {
+      type: "theory",
+      title: "Сводим к Two Sum II",
+      body: "Нужны все тройки с суммой 0 без повторов. Сортируем массив и перебираем первое число nums[i]. Для каждого ищем пару в хвосте с суммой -nums[i] — указателями навстречу, как в Two Sum II. Сортировка нужна и для указателей, и чтобы одинаковые числа стояли рядом: так повторы легко пропускать.",
+      mascot: "thinking",
+    },
+    {
+      type: "visualize",
+      title: "nums = [-1,0,1,2,-1,-4]",
+      steps: [
+        { array: [-4, -1, -1, 0, 1, 2], pointers: { i: -1, l: -1, r: -1 }, vars: { found: 0 }, note: "Сортируем: [-4, -1, -1, 0, 1, 2]" },
+        { array: [-4, -1, -1, 0, 1, 2], pointers: { i: 0, l: 1, r: 5 }, highlight: { compare: [1, 5] }, vars: { sum: -3, found: 0 }, note: "-4 + (-1) + 2 = -3 < 0 → l++" },
+        { array: [-4, -1, -1, 0, 1, 2], pointers: { i: 0, l: 2, r: 5 }, highlight: { compare: [2, 5] }, vars: { sum: -3, found: 0 }, note: "-4 + (-1) + 2 = -3 < 0 → l++" },
+        { array: [-4, -1, -1, 0, 1, 2], pointers: { i: 0, l: 3, r: 5 }, highlight: { compare: [3, 5] }, vars: { sum: -2, found: 0 }, note: "-4 + 0 + 2 = -2 < 0 → l++" },
+        { array: [-4, -1, -1, 0, 1, 2], pointers: { i: 0, l: 4, r: 5 }, highlight: { compare: [4, 5] }, vars: { sum: -1, found: 0 }, note: "-4 + 1 + 2 = -1 < 0 → l++" },
+        { array: [-4, -1, -1, 0, 1, 2], pointers: { i: 1, l: 2, r: 5 }, highlight: { done: [1, 2, 5] }, vars: { sum: 0, found: 1 }, note: "-1 + (-1) + 2 = 0 → тройка [-1, -1, 2], сдвигаем оба" },
+        { array: [-4, -1, -1, 0, 1, 2], pointers: { i: 1, l: 3, r: 4 }, highlight: { done: [1, 3, 4] }, vars: { sum: 0, found: 2 }, note: "-1 + 0 + 1 = 0 → тройка [-1, 0, 1], сдвигаем оба" },
+        { array: [-4, -1, -1, 0, 1, 2], pointers: { i: 2, l: -1, r: -1 }, highlight: { skip: [2] }, vars: { found: 2 }, note: "nums[2] = -1 — как предыдущий → continue, иначе тройки повторятся" },
+        { array: [-4, -1, -1, 0, 1, 2], pointers: { i: 3, l: 4, r: 5 }, highlight: { compare: [4, 5] }, vars: { sum: 3, found: 2 }, note: "0 + 1 + 2 = 3 > 0 → r--. Готово: [[-1, -1, 2], [-1, 0, 1]]" },
+      ],
+    },
+    {
+      type: "choice",
+      question: "Зачем пропускать nums[i], если он равен nums[i - 1]?",
+      options: [
+        "С тем же первым числом мы найдём те же тройки — получатся повторы",
+        "Чтобы не выйти за границы массива",
+        "Так быстрее работает сортировка",
+        "Чтобы l и r не встретились",
+      ],
+      correct: 0,
+      explanation:
+        "Все тройки с первым числом -1 уже найдены на прошлом i. Второй такой же -1 найдёт их снова, а ответ должен быть без повторов.",
+    },
+    {
+      type: "fill-blank",
+      code: "const sum = nums[i] + nums[l] + nums[r];\nif (sum < 0) ___;\nelse if (sum > 0) r--;",
+      options: ["l++", "r--", "i++", "l--"],
+      correct: 0,
+      explanation: "Сумма мала — берём число побольше: оно правее l.",
+    },
+    {
+      type: "predict-output",
+      code: "threeSum(nums)",
+      input: "nums = [0, 0, 0, 0]",
+      options: ["[[0, 0, 0]]", "[[0, 0, 0], [0, 0, 0]]", "[]", "[[0, 0, 0, 0]]"],
+      correct: 0,
+      explanation:
+        "Тройка из нулей одна. Без пропуска повторов мы нашли бы её несколько раз — поэтому и нужны эти проверки.",
+    },
+    {
+      type: "find-bug",
+      code: [
+        "function threeSum(nums) {",
+        "  nums.sort((a, b) => a - b);",
+        "  const result = [];",
+        "  for (let i = 0; i < nums.length - 2; i++) {",
+        "    if (i > 0 && nums[i] === nums[i + 1]) continue;",
+        "    let l = i + 1, r = nums.length - 1;",
+        "    while (l < r) {",
+        "      const sum = nums[i] + nums[l] + nums[r];",
+        "      if (sum < 0) l++;",
+        "      else if (sum > 0) r--;",
+        "      else {",
+        "        result.push([nums[i], nums[l], nums[r]]);",
+        "        while (l < r && nums[l] === nums[l + 1]) l++;",
+        "        while (l < r && nums[r] === nums[r - 1]) r--;",
+        "        l++; r--;",
+        "      }",
+        "    }",
+        "  }",
+        "  return result;",
+        "}",
+      ],
+      bugLine: 4,
+      fixed: "    if (i > 0 && nums[i] === nums[i - 1]) continue;",
+      explanation:
+        "Сравнивать нужно с предыдущим: так первая -1 отработает, а вторая пропустится. Сравнение со следующим пропускает первую -1, и тройка [-1, -1, 2] теряется.",
+    },
+    {
+      type: "order-lines",
+      lines: [
+        "function threeSum(nums) {",
+        "  nums.sort((a, b) => a - b);",
+        "  const result = [];",
+        "  for (let i = 0; i < nums.length - 2; i++) {",
+        "    if (i > 0 && nums[i] === nums[i - 1]) continue;",
+        "    let l = i + 1, r = nums.length - 1;",
+        "    while (l < r) {",
+        "      const sum = nums[i] + nums[l] + nums[r];",
+        "      if (sum < 0) l++;",
+        "      else if (sum > 0) r--;",
+        "      else {",
+        "        result.push([nums[i], nums[l], nums[r]]);",
+        "        while (l < r && nums[l] === nums[l + 1]) l++;",
+        "        while (l < r && nums[r] === nums[r - 1]) r--;",
+        "        l++; r--;",
+        "      }",
+        "    }",
+        "  }",
+        "  return result;",
+        "}",
+      ],
+      // Независимые пары: сортировка и result, пропуск i и объявление l/r, пропуски дублей l и r.
+      accept: [
+        [0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10,  11,  13,  12,  14,  15,  16,  17,  18,  19],
+        [0,  1,  2,  3,  5,  4,  6,  7,  8,  9,  10,  11,  12,  13,  14,  15,  16,  17,  18,  19],
+        [0,  1,  2,  3,  5,  4,  6,  7,  8,  9,  10,  11,  13,  12,  14,  15,  16,  17,  18,  19],
+        [0,  2,  1,  3,  4,  5,  6,  7,  8,  9,  10,  11,  12,  13,  14,  15,  16,  17,  18,  19],
+        [0,  2,  1,  3,  4,  5,  6,  7,  8,  9,  10,  11,  13,  12,  14,  15,  16,  17,  18,  19],
+        [0,  2,  1,  3,  5,  4,  6,  7,  8,  9,  10,  11,  12,  13,  14,  15,  16,  17,  18,  19],
+        [0,  2,  1,  3,  5,  4,  6,  7,  8,  9,  10,  11,  13,  12,  14,  15,  16,  17,  18,  19],
+      ],
+      explanation: "O(n²) по времени, O(1) дополнительной памяти.",
+    },
+  ],
+};
+
 export const twoPointers: Island = {
   id: "two-pointers",
   title: "Два указателя",
   emoji: "👉👈",
   color: "#7C5CFF",
   summary: [
-    "Read/write (27, 26, 80): i читает всё, k пишет только хорошие. Меняется лишь условие: !== val, !== nums[k - 1], !== nums[k - N].",
+    "Read/write (27, 26, 80, 392): один указатель читает всё, другой двигается только на «хорошем». Меняется лишь условие: !== val, !== nums[k - 1], совпадение символа.",
     "С конца (88): когда пишем в тот же массив, начинаем с пустого хвоста, чтобы не затереть непрочитанное.",
     "Навстречу (125, 189): l и r идут друг к другу — проверка палиндрома, разворот массива.",
+    "Навстречу по сумме (167, 11): в отсортированном массиве сумма подсказывает, кого двигать; в Container двигаем низкую стенку.",
+    "Фиксируй одно + два указателя (15): 3Sum = цикл по i + Two Sum II на хвосте, повторы пропускаем по соседям.",
     "Почти всегда O(n) по времени и O(1) по памяти — в этом и смысл паттерна.",
   ].join("\n"),
-  lessons: [lesson27, lesson26, lesson80, lesson88, lesson125, lesson189],
+  lessons: [
+    lesson27,
+    lesson26,
+    lesson80,
+    lesson88,
+    lesson125,
+    lesson189,
+    lesson392,
+    lesson167,
+    lesson11,
+    lesson15,
+  ],
 };

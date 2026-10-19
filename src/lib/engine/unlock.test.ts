@@ -41,6 +41,19 @@ describe("lessonStatuses", () => {
   });
 });
 
+describe("lessons inserted later", () => {
+  it("keeps completed lessons open after new ones appear before them", () => {
+    const grown = [island("one", ["a-1", "a-2", "a-3"]), island("two", ["b-1"])];
+    // b-1 пройден раньше, чем в остров один добавили a-3
+    expect(lessonStatuses(grown, { "a-1": done(), "a-2": done(), "b-1": done(true) })).toEqual({
+      "a-1": "completed",
+      "a-2": "completed",
+      "a-3": "available",
+      "b-1": "perfect",
+    });
+  });
+});
+
 describe("isIslandCompleted", () => {
   it("requires every lesson", () => {
     expect(isIslandCompleted(islands[0]!, { "a-1": done() })).toBe(false);
