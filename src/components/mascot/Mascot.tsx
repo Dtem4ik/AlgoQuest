@@ -96,9 +96,8 @@ export function Mascot({ state, size = 96, line, reactionKey, className }: Masco
           <motion.p
             key={line}
             initial={{ opacity: 0, scale: 0.9, x: -6 }}
-            animate={{ opacity: 1, scale: 1, x: 0 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            animate={{ opacity: 1, scale: 1, x: 0, transition: { duration: 0.18, ease: "easeOut" } }}
+            exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.1 } }}
             className={cn(
               "relative rounded-2xl border-2 border-border bg-surface px-4 py-3 text-base font-bold text-ink",
               // хвостик облачка

@@ -1,5 +1,8 @@
 import { Highlight, type PrismTheme } from "prism-react-renderer";
+import { Fragment, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
+
+const BLANK = "___";
 
 // Цвета берём из CSS-переменных, поэтому тёмная тема работает без второй темы Prism.
 const theme: PrismTheme = {
@@ -18,6 +21,8 @@ interface CodeBlockProps {
   code: string;
   language?: string;
   showLineNumbers?: boolean;
+  /** Что подставить на место `___` в коде (слот fill-blank). */
+  blank?: ReactNode;
   className?: string;
 }
 
@@ -25,6 +30,7 @@ export function CodeBlock({
   code,
   language = "javascript",
   showLineNumbers = false,
+  blank,
   className,
 }: CodeBlockProps) {
   return (
@@ -44,9 +50,20 @@ export function CodeBlock({
                     {i + 1}
                   </span>
                 )}
-                {line.map((token, j) => (
-                  <span key={j} {...getTokenProps({ token })} />
-                ))}
+                {line.map((token, j) => {
+                  const props = getTokenProps({ token });
+                  if (blank === undefined || !token.content.includes(BLANK)) {
+                    return <span key={j} {...props} />;
+                  }
+                  const [before, after] = token.content.split(BLANK);
+                  return (
+                    <Fragment key={j}>
+                      <span {...props}>{before}</span>
+                      {blank}
+                      <span {...props}>{after}</span>
+                    </Fragment>
+                  );
+                })}
               </div>
             ))}
           </code>

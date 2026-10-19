@@ -1,0 +1,159 @@
+import { z } from "zod";
+import type { Exercise, Island, Lesson, MascotState, VizStep } from "@/lib/types";
+
+const BLANK = "___";
+
+const text = z.string().trim().min(1);
+
+const mascotStateSchema: z.ZodType<MascotState> = z.enum([
+  "idle",
+  "happy",
+  "sad",
+  "thinking",
+  "celebrate",
+  "sleepy",
+]);
+
+const indexList = z.array(z.number().int().nonnegative());
+
+const vizStepSchema: z.ZodType<VizStep> = z
+  .object({
+    array: z.array(z.union([z.number(), z.string()])).min(1),
+    pointers: z.record(z.string(), z.number().int()),
+    highlight: z
+      .object({ compare: indexList, write: indexList, skip: indexList, done: indexList })
+      .partial()
+      .optional(),
+    vars: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
+    note: text,
+  })
+  .superRefine((step, ctx) => {
+    const n = step.array.length;
+    for (const [name, index] of Object.entries(step.pointers)) {
+      if (index < -1 || index >= n) {
+        ctx.addIssue({ code: "custom", message: `pointer "${name}" = ${index} is out of range` });
+      }
+    }
+    for (const [kind, indices] of Object.entries(step.highlight ?? {})) {
+      if (indices.some((i) => i >= n)) {
+        ctx.addIssue({ code: "custom", message: `highlight.${kind} is out of range` });
+      }
+    }
+  });
+
+/** 2–4 варианта без повторов и верный индекс в их пределах. */
+const withOptions = <T extends { options: string[]; correct: number }>(
+  value: T,
+  ctx: z.RefinementCtx,
+) => {
+  if (new Set(value.options).size !== value.options.length) {
+    ctx.addIssue({ code: "custom", message: "options must be unique" });
+  }
+  if (value.correct >= value.options.length) {
+    ctx.addIssue({ code: "custom", message: `correct = ${value.correct} is out of range` });
+  }
+};
+
+const options = z.array(text).min(2).max(4);
+const correct = z.number().int().nonnegative();
+
+const exerciseSchema: z.ZodType<Exercise> = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("theory"),
+    title: text,
+    body: text,
+    code: text.optional(),
+    mascot: mascotStateSchema.optional(),
+  }),
+  z.object({
+    type: z.literal("visualize"),
+    title: text,
+    steps: z.array(vizStepSchema).min(2),
+  }),
+  z
+    .object({
+      type: z.literal("choice"),
+      question: text,
+      options,
+      correct,
+      explanation: text,
+    })
+    .superRefine(withOptions),
+  z
+    .object({
+      type: z.literal("predict-output"),
+      code: text,
+      input: text,
+      options,
+      correct,
+      explanation: text,
+    })
+    .superRefine(withOptions),
+  z
+    .object({
+      type: z.literal("fill-blank"),
+      code: text,
+      options,
+      correct,
+      explanation: text,
+    })
+    .superRefine(withOptions)
+    .refine((e) => e.code.split(BLANK).length === 2, {
+      message: `code must contain exactly one ${BLANK}`,
+    }),
+  z.object({
+    type: z.literal("order-lines"),
+    lines: z.array(z.string().min(1)).min(2),
+    explanation: text,
+  }),
+  z
+    .object({
+      type: z.literal("find-bug"),
+      code: z.array(z.string()).min(2),
+      bugLine: z.number().int().nonnegative(),
+      fixed: text,
+      explanation: text,
+    })
+    .refine((e) => e.bugLine < e.code.length, { message: "bugLine is out of range" }),
+]);
+
+const lessonSchema: z.ZodType<Lesson> = z.object({
+  id: z.string().regex(/^[a-z]+-\d+$/, "id must look like 'tp-27'"),
+  title: text,
+  leetcode: z.object({
+    id: z.number().int().positive(),
+    slug: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "slug must be kebab-case"),
+    difficulty: z.enum(["Easy", "Medium", "Hard"]),
+  }),
+  xp: z.number().int().min(10).max(20),
+  interview: z.object({ brute: text, optimal: text, time: text, space: text }),
+  exercises: z.array(exerciseSchema).min(1),
+});
+
+const islandSchema: z.ZodType<Island> = z.object({
+  id: z.string().regex(/^[a-z]+(-[a-z]+)*$/, "id must be kebab-case"),
+  title: text,
+  emoji: text,
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "color must be #RRGGBB"),
+  summary: text,
+  lessons: z.array(lessonSchema).min(1),
+});
+
+const contentSchema = z.array(islandSchema).superRefine((islands, ctx) => {
+  const seen = new Set<string>();
+  for (const lesson of islands.flatMap((island) => island.lessons)) {
+    if (seen.has(lesson.id)) {
+      ctx.addIssue({ code: "custom", message: `duplicate lesson id "${lesson.id}"` });
+    }
+    seen.add(lesson.id);
+  }
+});
+
+/** Валидирует контент; ошибка в данных роняет сборку с понятным сообщением. */
+export function parseContent(islands: Island[]): Island[] {
+  const result = contentSchema.safeParse(islands);
+  if (!result.success) {
+    throw new Error(`Invalid lesson content:\n${z.prettifyError(result.error)}`);
+  }
+  return result.data;
+}
