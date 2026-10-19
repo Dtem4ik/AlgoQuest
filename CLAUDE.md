@@ -32,7 +32,10 @@ src/content/islands/*.ts контент, по файлу на остров; cont
 src/content/*.ts         реплики маскота, подсказки к упражнениям
 src/lib/types.ts         модель данных из SPEC §7 (+ Lesson.interview)
 src/lib/content/schema.ts zod-схема контента (типы сверены через z.ZodType<T>)
-src/lib/engine/          движок урока: lesson.ts (очередь, фазы), check.ts (проверка ответа), unlock.ts (статусы на карте)
+src/lib/engine/          движок урока: lesson.ts (очередь, фазы), check.ts (Answer, проверка), order-lines.ts
+                         (перемешивание, отступы), unlock.ts (статусы на карте)
+src/lib/viz/steps.ts     хелперы визуализатора: указатели по ячейкам, подсветка, размер ячейки
+src/components/viz/      ArrayVisualizer (ячейки, указатели-стрелки через layoutId, Назад/Авто/Шаг), useStepPlayer
 src/lib/progress/        чистые функции: dates, hearts, streak, progress (+ тесты)
 src/store/progress.ts    Zustand persist (ключ `algoquest-progress`), useProgressHydrated
 src/hooks/               useToday (день), useNow (часы раз в секунду), useHearts (сердечки с регеном)
@@ -44,7 +47,9 @@ src/hooks/               useToday (день), useNow (часы раз в сек�
 - **Точность** — доля оцениваемых упражнений, решённых с первой попытки; «идеально» — без ошибок вообще.
 - **Сердечки в уроке** живут в состоянии движка (старт = store с учётом регена), store дублирует `loseHeart`.
 - Страница урока серверная: `generateStaticParams` + `notFound()`. `dynamicParams` с cacheComponents недоступен.
-- Пока не готовы visualize / order-lines / find-bug, их показывает заглушка `UpcomingExercise`. Её убрать на Этапе 2, а `isGraded` и `Answer` в `check.ts` расширить.
+- **Ответы** — общий тип `Answer` (`option` | `order` | `line`) в `lib/engine/check.ts`. Стартовый ответ даёт `initialAnswer` (для order-lines перемешивание, вызывается в обработчике события). `visualize` пропускает дальше только после последнего шага.
+- **order-lines**: порядок проверяется по тексту строк (одинаковые `}` взаимозаменяемы), отступы считает `indentLevels` по скобкам. Схема требует, чтобы отступы в данных были 2 пробела на уровень.
+- **Контент проверяется исполнением**: `src/content/solutions.test.ts` запускает order-lines на тест-кейсах, а find-bug проверяет в обе стороны (с фиксом проходит, с багом падает). Для каждого нового урока нужно добавить кейсы в `CASES`, иначе тест упадёт.
 
 ## Договорённости
 
@@ -53,6 +58,7 @@ src/hooks/               useToday (день), useNow (часы раз в сек�
 - **Activity.** Next с cacheComponents не размонтирует скрытые маршруты, а прячет их с сохранением состояния. Поэтому при уходе со страницы локальное состояние сбрасываем сами: `runKey` в LessonScreen, закрытие поповера в PathMap.
 - **Обработчики передаём в JSX-пропсы напрямую.** Если положить колбэк в объект, React Compiler (`react-hooks/purity`) сочтёт, что он может вызываться при рендере, и запретит в нём `Date.now()`.
 - **Гидрация.** Данные из store показываем после `useProgressHydrated()`, до этого рендерим плейсхолдер (`StatBadge value={null}`).
+- **zod-схема только проверяет** (`refine`), но не трансформирует (`.trim()` и т.п. запрещены): иначе ломаются отступы в коде. Это закреплено тестом.
 - **Цвета** — только через токены (`bg-primary`, `text-ink-muted`, `bg-surface`...). Значения в `:root` и `.dark` в `globals.css`. Тёмная тема включается классом `.dark` на `<html>` (переключатель появится на Этапе 3).
 - **Объёмная кнопка**: `shadow-[0_4px_0_var(--ledge)]` + `active:translate-y-1 active:shadow-none`. Цвет подложки задаётся переменной `--ledge` в варианте.
 - **Анимации**: Framer Motion, 150–300ms, пружины. `MotionConfig reducedMotion="user"` стоит в `app/providers.tsx`. Бесконечные циклы дополнительно выключаем через `useReducedMotion()`.

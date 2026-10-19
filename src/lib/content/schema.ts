@@ -1,9 +1,11 @@
 import { z } from "zod";
+import { indentLevels } from "@/lib/engine/order-lines";
 import type { Exercise, Island, Lesson, MascotState, VizStep } from "@/lib/types";
 
 const BLANK = "___";
 
-const text = z.string().trim().min(1);
+// Только проверка, без .trim(): схема не должна менять контент (отступы в коде важны).
+const text = z.string().refine((s) => s.trim().length > 0, { message: "must not be blank" });
 
 const mascotStateSchema: z.ZodType<MascotState> = z.enum([
   "idle",
@@ -101,11 +103,20 @@ const exerciseSchema: z.ZodType<Exercise> = z.discriminatedUnion("type", [
     .refine((e) => e.code.split(BLANK).length === 2, {
       message: `code must contain exactly one ${BLANK}`,
     }),
-  z.object({
-    type: z.literal("order-lines"),
-    lines: z.array(z.string().min(1)).min(2),
-    explanation: text,
-  }),
+  z
+    .object({
+      type: z.literal("order-lines"),
+      lines: z.array(z.string().min(1)).min(2),
+      explanation: text,
+    })
+    // Движок пересчитывает отступы сам, поэтому в данных они должны совпадать со скобками.
+    .refine(
+      (e) => {
+        const levels = indentLevels(e.lines);
+        return e.lines.every((line, i) => line === " ".repeat(2 * (levels[i] ?? 0)) + line.trim());
+      },
+      { message: "order-lines indentation must be 2 spaces per brace level" },
+    ),
   z
     .object({
       type: z.literal("find-bug"),
@@ -114,7 +125,10 @@ const exerciseSchema: z.ZodType<Exercise> = z.discriminatedUnion("type", [
       fixed: text,
       explanation: text,
     })
-    .refine((e) => e.bugLine < e.code.length, { message: "bugLine is out of range" }),
+    .refine((e) => e.bugLine < e.code.length, { message: "bugLine is out of range" })
+    .refine((e) => e.code[e.bugLine]?.trim() !== e.fixed.trim(), {
+      message: "fixed must differ from the buggy line",
+    }),
 ]);
 
 const lessonSchema: z.ZodType<Lesson> = z.object({

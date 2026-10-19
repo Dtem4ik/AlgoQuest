@@ -72,3 +72,24 @@ export function CodeBlock({
     </Highlight>
   );
 }
+
+/**
+ * Одна подсвеченная строка кода без обёртки <pre> — для строк-карточек и строк-кнопок.
+ * Отступ рисуется отдельно, чтобы className (например, зачёркивание) касался только кода.
+ */
+export function CodeLine({ code, className }: { code: string; className?: string }) {
+  const body = code.trimStart();
+  const indent = code.slice(0, code.length - body.length);
+  return (
+    <code className="font-mono whitespace-pre text-(--code-ink)">
+      {indent}
+      <Highlight code={body} language="javascript" theme={theme}>
+        {({ tokens, getTokenProps }) => (
+          <span className={className}>
+            {tokens[0]?.map((token, j) => <span key={j} {...getTokenProps({ token })} />)}
+          </span>
+        )}
+      </Highlight>
+    </code>
+  );
+}

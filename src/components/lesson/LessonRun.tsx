@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { EXERCISE_PROMPTS } from "@/content/lesson-copy";
 import { pickMascotLine } from "@/content/mascot-lines";
-import { checkAnswer, isGraded } from "@/lib/engine/check";
+import { checkAnswer, initialAnswer, isGraded, isOptionExercise, type Answer } from "@/lib/engine/check";
 import {
   acknowledge,
   advance,
@@ -49,7 +49,12 @@ export function LessonRun({ lesson, onRetry, onLeave }: LessonRunProps) {
   const [engine, setEngine] = useState<LessonState>(() =>
     startLesson(lesson, regenHearts(useProgressStore.getState(), Date.now()).hearts),
   );
-  const [selected, setSelected] = useState<number | null>(null);
+  const [answer, setAnswer] = useState<Answer | null>(() => {
+    const first = lesson.exercises[0];
+    return first ? initialAnswer(first, Math.random) : null;
+  });
+  /** Визуализация досмотрена до конца — можно идти дальше. */
+  const [visualized, setVisualized] = useState(false);
   const [reaction, setReaction] = useState<Reaction | null>(null);
   const [outcome, setOutcome] = useState<LessonOutcome | null>(null);
   const [exitOpen, setExitOpen] = useState(false);
@@ -60,7 +65,9 @@ export function LessonRun({ lesson, onRetry, onLeave }: LessonRunProps) {
 
   const moveOn = (next: LessonState) => {
     setEngine(next);
-    setSelected(null);
+    const upcoming = currentExercise(lesson, next);
+    setAnswer(upcoming ? initialAnswer(upcoming.exercise, Math.random) : null);
+    setVisualized(false);
     setReaction(null);
     setTurn((t) => t + 1);
     if (next.phase === "finished") {
@@ -85,8 +92,8 @@ export function LessonRun({ lesson, onRetry, onLeave }: LessonRunProps) {
   };
 
   const handleCheck = () => {
-    if (!current || !isGraded(current.exercise) || selected === null) return;
-    const correct = checkAnswer(current.exercise, { type: "option", index: selected });
+    if (!current || !isGraded(current.exercise) || answer === null) return;
+    const correct = checkAnswer(current.exercise, answer);
     if (!correct) loseHeart();
     setEngine(submitAnswer(engine, correct));
     const state = correct ? "happy" : "sad";
@@ -110,15 +117,19 @@ export function LessonRun({ lesson, onRetry, onLeave }: LessonRunProps) {
       kind: "feedback",
       correct: engine.lastCorrect === true,
       explanation: exercise.explanation,
-      correctAnswer: engine.lastCorrect ? undefined : exercise.options[exercise.correct],
+      // order-lines и find-bug показывают верный ответ прямо в упражнении
+      correctAnswer:
+        engine.lastCorrect || !isOptionExercise(exercise) ? undefined : exercise.options[exercise.correct],
       answerIsCode: exercise.type !== "choice",
     };
   } else if (isGraded(exercise)) {
-    footer = { kind: "check", disabled: selected === null };
+    footer = { kind: "check", disabled: answer === null };
   } else {
+    const waiting = exercise.type === "visualize" && !visualized;
     footer = {
       kind: "acknowledge",
-      label: exercise.type === "theory" ? "Понятно" : "Дальше",
+      label: exercise.type === "theory" ? "Понятно" : waiting ? "Досмотри до конца" : "Дальше",
+      disabled: waiting,
     };
   }
 
@@ -151,9 +162,10 @@ export function LessonRun({ lesson, onRetry, onLeave }: LessonRunProps) {
             />
             <ExerciseView
               exercise={exercise}
-              selected={selected}
-              onSelect={setSelected}
+              answer={answer}
+              onAnswer={setAnswer}
               checked={checked}
+              onVisualized={() => setVisualized(true)}
             />
           </motion.div>
         </AnimatePresence>

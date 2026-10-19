@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 
 export type FooterMode =
   | { kind: "check"; disabled: boolean }
-  | { kind: "acknowledge"; label: string }
+  | { kind: "acknowledge"; label: string; disabled?: boolean }
   | {
       kind: "feedback";
       correct: boolean;
@@ -106,7 +106,7 @@ export function LessonFooter({ mode, onCheck, onContinue }: LessonFooterProps) {
                   Проверить
                 </Button>
               ) : (
-                <Button size="lg" onClick={onContinue}>
+                <Button size="lg" disabled={mode.disabled} onClick={onContinue}>
                   {mode.label}
                 </Button>
               )}

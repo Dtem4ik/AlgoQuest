@@ -16,6 +16,10 @@ describe("content", () => {
     expect(islands.length).toBeGreaterThan(0);
   });
 
+  it("returns content unchanged (no trimming of code indentation)", () => {
+    expect(parseContent([twoPointers])).toEqual([twoPointers]);
+  });
+
   it("rejects an out-of-range correct answer", () => {
     expect(() =>
       parseContent(
@@ -45,6 +49,22 @@ describe("content", () => {
         }),
       ),
     ).toThrow(/pointer "i"/);
+  });
+
+  it("requires order-lines indentation to follow the braces", () => {
+    expect(() =>
+      parseContent(
+        withExercise({ type: "order-lines", lines: ["if (a) {", "x();", "}"], explanation: "e" }),
+      ),
+    ).toThrow(/2 spaces per brace level/);
+  });
+
+  it("requires find-bug to actually fix the line", () => {
+    expect(() =>
+      parseContent(
+        withExercise({ type: "find-bug", code: ["a", "b"], bugLine: 1, fixed: " b", explanation: "e" }),
+      ),
+    ).toThrow(/fixed must differ/);
   });
 
   it("rejects duplicate lesson ids", () => {

@@ -8,12 +8,14 @@ import { Card } from "@/components/ui/Card";
 import { CodeBlock } from "@/components/ui/CodeBlock";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatBadge } from "@/components/ui/StatBadge";
+import { ArrayVisualizer } from "@/components/viz/ArrayVisualizer";
+import { lesson27 } from "@/content/islands/two-pointers";
 import { MASCOT_LINES, pickMascotLine } from "@/content/mascot-lines";
 import { useHearts } from "@/hooks/useHearts";
 import { useToday } from "@/hooks/useToday";
 import { cn } from "@/lib/cn";
 import { displayedStreak } from "@/lib/progress/streak";
-import type { MascotState } from "@/lib/types";
+import type { Exercise, MascotState, VizStep } from "@/lib/types";
 import { useProgressHydrated, useProgressStore } from "@/store/progress";
 
 const MASCOT_STATES: MascotState[] = ["idle", "happy", "sad", "thinking", "celebrate", "sleepy"];
@@ -29,6 +31,19 @@ const SWATCHES = [
   ["ink", "bg-ink"],
   ["muted", "bg-ink-muted"],
 ] as const;
+
+const LESSON_27_STEPS =
+  lesson27.exercises.find((e): e is Extract<Exercise, { type: "visualize" }> => e.type === "visualize")
+    ?.steps ?? [];
+
+// Длинная строка как массив символов: проверка сжатия ячеек и скролла.
+const PALINDROME = [..."A man, a plan, a canal: Panama"];
+const PALINDROME_STEPS: VizStep[] = [
+  { array: PALINDROME, pointers: { l: 0, r: 29 }, highlight: { compare: [0, 29] }, note: "'A' и 'a' → в toLowerCase равны" },
+  { array: PALINDROME, pointers: { l: 1, r: 28 }, highlight: { skip: [1] }, note: "Пробел — не буква и не цифра: l++ и continue" },
+  { array: PALINDROME, pointers: { l: 2, r: 28 }, highlight: { compare: [2, 28] }, vars: { "s[l]": "m", "s[r]": "m" }, note: "'m' и 'm' → равны, сдвигаем оба" },
+  { array: PALINDROME, pointers: { l: 17, r: 17 }, highlight: { done: [0, 2, 3, 4, 7, 9, 10, 11, 12, 15, 17, 18, 19, 20, 21, 24, 25, 26, 27, 28, 29] }, note: "Указатели встретились → палиндром" },
+];
 
 const SAMPLE_CODE = `function removeElement(nums, val) {
   let k = 0;
@@ -213,6 +228,11 @@ export function UiShowcase() {
 
       <Section title="Код">
         <CodeBlock code={SAMPLE_CODE} showLineNumbers />
+      </Section>
+
+      <Section title="Визуализатор">
+        <ArrayVisualizer steps={LESSON_27_STEPS} />
+        <ArrayVisualizer steps={PALINDROME_STEPS} />
       </Section>
 
       <Section title="Бит — все состояния">

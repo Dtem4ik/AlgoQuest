@@ -64,6 +64,25 @@ export const lesson27: Lesson = {
         "Все числа равны val, k++ ни разу не сработал. Краевой случай — проговаривай такие на собесе.",
     },
     {
+      type: "find-bug",
+      code: [
+        "function removeElement(nums, val) {",
+        "  let k = 0;",
+        "  for (let i = 0; i < nums.length; i++) {",
+        "    if (nums[i] !== val) {",
+        "      nums[i] = nums[k];",
+        "      k++;",
+        "    }",
+        "  }",
+        "  return k;",
+        "}",
+      ],
+      bugLine: 4,
+      fixed: "      nums[k] = nums[i];",
+      explanation:
+        "Пишет k, читает i: nums[k] = nums[i]. Перепутанное присваивание тащит старые значения назад, и хорошие числа не собираются в начале массива.",
+    },
+    {
       type: "order-lines",
       lines: [
         "function removeElement(nums, val) {",
