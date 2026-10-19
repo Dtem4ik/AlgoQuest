@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { lesson27 } from "@/content/islands/two-pointers";
 import type { Exercise } from "@/lib/types";
 import { checkAnswer, initialAnswer } from "./check";
-import { indentLevels, isCorrectOrder, shuffleOrder } from "./order-lines";
+import { indentLevels, isCorrectOrder, matchSolution, shuffleOrder } from "./order-lines";
 
 const solution = lesson27.exercises.find(
   (e): e is Extract<Exercise, { type: "order-lines" }> => e.type === "order-lines",
@@ -45,6 +45,23 @@ describe("isCorrectOrder", () => {
     expect(isCorrectOrder(["  a", "b"], [0, 1])).toBe(true);
     expect(isCorrectOrder(["a", "b"], [0])).toBe(false);
     expect(isCorrectOrder(["a", "b"], [0, 0])).toBe(false);
+  });
+});
+
+describe("accept (alternative orders)", () => {
+  const lines = ["a", "b", "c"];
+  const accept = [[0, 2, 1]];
+
+  it("accepts the listed alternative and reports which solution matched", () => {
+    expect(isCorrectOrder(lines, [0, 2, 1], accept)).toBe(true);
+    expect(matchSolution(lines, accept, [0, 2, 1])).toEqual(["a", "c", "b"]);
+    expect(isCorrectOrder(lines, [1, 0, 2], accept)).toBe(false);
+  });
+
+  it("never shuffles into an accepted alternative", () => {
+    for (let seed = 1; seed <= 100; seed++) {
+      expect(isCorrectOrder(lines, shuffleOrder(lines, seeded(seed), accept), accept)).toBe(false);
+    }
   });
 });
 

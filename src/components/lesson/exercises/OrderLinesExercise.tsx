@@ -8,7 +8,10 @@ import {
   TouchSensor,
   useSensor,
   useSensors,
+  type Announcements,
   type DragEndEvent,
+  type ScreenReaderInstructions,
+  type UniqueIdentifier,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -20,7 +23,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { CodeBlock, CodeLine } from "@/components/ui/CodeBlock";
 import { cn } from "@/lib/cn";
-import { indentLevels } from "@/lib/engine/order-lines";
+import { indentLevels, matchSolution } from "@/lib/engine/order-lines";
 import type { Exercise } from "@/lib/types";
 
 const INDENT_PX = 16;
@@ -65,11 +68,12 @@ function SortableLine({ id, text, level, tone, disabled }: SortableLineProps) {
           TONES[tone],
         )}
       >
+        {/* Длинные строки переносятся с висячим отступом, а не скроллятся внутри карточки. */}
         <span
-          className="min-w-0 flex-1 overflow-x-auto text-[13px] transition-[padding] duration-200"
+          className="min-w-0 flex-1 text-[12px] leading-5 transition-[padding] duration-200"
           style={{ paddingLeft: 10 + level * INDENT_PX }}
         >
-          <CodeLine code={text} />
+          <CodeLine code={text} wrap />
         </span>
         {!disabled && (
           <svg viewBox="0 0 12 18" className="h-4 w-3 shrink-0 text-ink-muted/50" aria-hidden>
@@ -79,6 +83,27 @@ function SortableLine({ id, text, level, tone, disabled }: SortableLineProps) {
       </div>
     </li>
   );
+}
+
+const SCREEN_READER_INSTRUCTIONS: ScreenReaderInstructions = {
+  draggable:
+    "Чтобы взять строку, нажми пробел или Enter. Стрелками вверх и вниз перемещай её, пробелом или Enter ставь на место, Escape — отмена.",
+};
+
+/** Объявления для скринридера на русском, с текстом строки вместо внутреннего id. */
+function announcements(ids: string[], texts: string[]): Announcements {
+  const line = (id: UniqueIdentifier) => `«${texts[ids.indexOf(String(id))] ?? ""}»`;
+  const position = (id: UniqueIdentifier) => `${ids.indexOf(String(id)) + 1} из ${ids.length}`;
+  return {
+    onDragStart: ({ active }) => `Взята строка ${line(active.id)}, позиция ${position(active.id)}.`,
+    onDragOver: ({ active, over }) =>
+      over ? `Строка ${line(active.id)} над позицией ${position(over.id)}.` : undefined,
+    onDragEnd: ({ active, over }) =>
+      over
+        ? `Строка ${line(active.id)} поставлена на позицию ${position(over.id)}.`
+        : `Строка ${line(active.id)} отпущена.`,
+    onDragCancel: ({ active }) => `Перетаскивание отменено, строка ${line(active.id)} на месте.`,
+  };
 }
 
 interface OrderLinesExerciseProps {
@@ -100,7 +125,9 @@ export function OrderLinesExercise({ exercise, order, onReorder, checked }: Orde
   const texts = order.map((index) => exercise.lines[index]?.trim() ?? "");
   const levels = indentLevels(texts);
   const ids = order.map((index) => `line-${index}`);
-  const solved = texts.every((text, i) => text === exercise.lines[i]?.trim());
+  // Сверяем с тем верным порядком, который собрал пользователь (их может быть несколько).
+  const matched = matchSolution(exercise.lines, exercise.accept, order);
+  const reference = matched ?? exercise.lines;
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return;
@@ -116,7 +143,15 @@ export function OrderLinesExercise({ exercise, order, onReorder, checked }: Orde
         Перетаскивай строки. Отступы расставятся сами.
       </p>
 
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+        accessibility={{
+          announcements: announcements(ids, texts),
+          screenReaderInstructions: SCREEN_READER_INSTRUCTIONS,
+        }}
+      >
         <SortableContext items={ids} strategy={verticalListSortingStrategy}>
           <ol className="space-y-1.5" aria-label="Строки решения">
             {order.map((index, position) => (
@@ -129,7 +164,7 @@ export function OrderLinesExercise({ exercise, order, onReorder, checked }: Orde
                 tone={
                   !checked
                     ? "idle"
-                    : texts[position] === exercise.lines[position]?.trim()
+                    : texts[position] === reference[position]?.trim()
                       ? "correct"
                       : "wrong"
                 }
@@ -139,7 +174,7 @@ export function OrderLinesExercise({ exercise, order, onReorder, checked }: Orde
         </SortableContext>
       </DndContext>
 
-      {checked && !solved && (
+      {checked && !matched && (
         <div className="space-y-2">
           <p className="font-extrabold text-success-shade">Правильный порядок:</p>
           <CodeBlock code={exercise.lines.join("\n")} />

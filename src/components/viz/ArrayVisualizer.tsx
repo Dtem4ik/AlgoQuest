@@ -4,7 +4,7 @@ import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import { useEffect, useId } from "react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
-import type { VizStep } from "@/lib/types";
+import type { VizRow, VizStep } from "@/lib/types";
 import { cellLook, cellSize, formatCell, pointersByCell, type CellLook } from "@/lib/viz/steps";
 import { useStepPlayer } from "./useStepPlayer";
 
@@ -59,10 +59,10 @@ function Cell({ value, look, size }: { value: number | string; look: CellLook; s
   );
 }
 
-function Pointer({ name, color }: { name: string; color: string }) {
+function Pointer({ id, name, color }: { id: string; name: string; color: string }) {
   return (
     <motion.div
-      layoutId={`pointer-${name}`}
+      layoutId={id}
       transition={{ type: "spring", stiffness: 420, damping: 32 }}
       className="flex flex-col items-center leading-none"
       style={{ color }}
@@ -77,6 +77,60 @@ function Pointer({ name, color }: { name: string; color: string }) {
         {name}
       </span>
     </motion.div>
+  );
+}
+
+/** Высота стопки указателей под ячейкой, px. */
+const POINTER_HEIGHT = 30;
+
+/** Сколько указателей максимум оказывается на одной ячейке — под это резервируем высоту. */
+function maxStack(rows: VizRow[]): number {
+  return Math.max(1, ...rows.flatMap((row) => [...pointersByCell(row).values()].map((names) => names.length)));
+}
+
+interface RowSpec {
+  key: string;
+  label?: string;
+  row: VizRow;
+  stack: number;
+}
+
+interface ArrayRowProps {
+  rowKey: string;
+  label?: string;
+  row: VizRow;
+  size: number;
+  stack: number;
+  pointerOrder: string[];
+}
+
+function ArrayRow({ rowKey, label, row, size, stack, pointerOrder }: ArrayRowProps) {
+  const pointers = pointersByCell(row);
+  return (
+    <div>
+      {label && <p className="mb-1 font-mono text-xs font-black text-ink-muted">{label}</p>}
+      <div className="flex gap-1">
+        {row.array.map((value, i) => (
+          <div key={i} className="flex flex-col items-center gap-1" style={{ width: size }}>
+            <span className="font-mono text-[11px] font-bold text-ink-muted">{i}</span>
+            <Cell value={value} look={cellLook(row, i)} size={size} />
+            <div
+              className="flex flex-col items-center gap-0.5 pt-1"
+              style={{ minHeight: stack * POINTER_HEIGHT }}
+            >
+              {pointers.get(i)?.map((name) => (
+                <Pointer
+                  key={name}
+                  id={`pointer-${rowKey}-${name}`}
+                  name={name}
+                  color={pointerColor(name, pointerOrder)}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -98,30 +152,59 @@ export function ArrayVisualizer({ steps, onComplete }: ArrayVisualizerProps) {
 
   if (!step) return null;
 
-  const size = cellSize(step.array.length);
-  const pointers = pointersByCell(step);
-  const pointerOrder = Object.keys(steps[0]?.pointers ?? {});
+  const rows: RowSpec[] = [
+    { key: "main", label: step.label, row: step, stack: maxStack(steps.map((s) => s)) },
+  ];
+  if (step.secondary) {
+    rows.push({
+      key: "secondary",
+      label: step.secondary.label,
+      row: step.secondary,
+      stack: maxStack(steps.flatMap((s) => (s.secondary ? [s.secondary] : []))),
+    });
+  }
+  const size = cellSize(Math.max(...rows.map((r) => r.row.array.length)));
+  const pointerOrder = [
+    ...Object.keys(steps[0]?.pointers ?? {}),
+    ...Object.keys(steps[0]?.secondary?.pointers ?? {}),
+  ];
   const vars = Object.entries(step.vars ?? {});
 
   return (
     <div className="space-y-4">
       {/* Массив скроллится сам, страница вбок не едет. */}
-      <div className="-mx-1 overflow-x-auto px-1 pt-1 pb-2">
+      <div className="-mx-1 overflow-x-auto px-1 pt-1 pb-2" role="img" aria-label={step.note}>
         <LayoutGroup id={groupId}>
-          <div className="mx-auto flex w-max gap-1" role="img" aria-label={step.note}>
-            {step.array.map((value, i) => (
-              <div key={i} className="flex flex-col items-center gap-1" style={{ width: size }}>
-                <span className="font-mono text-[11px] font-bold text-ink-muted">{i}</span>
-                <Cell value={value} look={cellLook(step, i)} size={size} />
-                <div className="flex min-h-14 flex-col items-center gap-0.5 pt-1">
-                  {pointers.get(i)?.map((name) => (
-                    <Pointer key={name} name={name} color={pointerColor(name, pointerOrder)} />
-                  ))}
-                </div>
-              </div>
+          <div className="mx-auto w-max space-y-2">
+            {rows.map(({ key, label, row, stack }) => (
+              <ArrayRow
+                key={key}
+                rowKey={key}
+                label={label}
+                row={row}
+                size={size}
+                stack={stack}
+                pointerOrder={pointerOrder}
+              />
             ))}
           </div>
         </LayoutGroup>
+      </div>
+
+      {/* Управление сразу под массивами, чтобы на высоких визуализациях не уезжало под футер. */}
+      <div className="flex items-center gap-2">
+        <Button size="sm" variant="secondary" onClick={player.prev} disabled={player.index === 0}>
+          Назад
+        </Button>
+        <Button size="sm" variant="secondary" onClick={player.toggleAuto} aria-pressed={player.playing}>
+          {player.playing ? "Пауза" : "Авто"}
+        </Button>
+        <Button size="sm" className="flex-1" onClick={player.next} disabled={atEnd}>
+          Шаг
+        </Button>
+        <span className="w-12 shrink-0 text-right text-sm font-extrabold text-ink-muted tabular-nums">
+          {player.index + 1} / {steps.length}
+        </span>
       </div>
 
       <div className="min-h-20 space-y-2 rounded-2xl bg-bg p-3">
@@ -150,21 +233,6 @@ export function ArrayVisualizer({ steps, onComplete }: ArrayVisualizerProps) {
             {step.note}
           </motion.p>
         </AnimatePresence>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <Button size="sm" variant="secondary" onClick={player.prev} disabled={player.index === 0}>
-          Назад
-        </Button>
-        <Button size="sm" variant="secondary" onClick={player.toggleAuto} aria-pressed={player.playing}>
-          {player.playing ? "Пауза" : "Авто"}
-        </Button>
-        <Button size="sm" className="flex-1" onClick={player.next} disabled={atEnd}>
-          Шаг
-        </Button>
-        <span className="w-12 shrink-0 text-right text-sm font-extrabold text-ink-muted tabular-nums">
-          {player.index + 1} / {steps.length}
-        </span>
       </div>
     </div>
   );

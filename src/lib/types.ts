@@ -10,11 +10,19 @@ export type PointerName = string;
 
 export type HighlightKind = "compare" | "write" | "skip" | "done";
 
-export interface VizStep {
+/** Ряд ячеек с указателями и подсветкой. */
+export interface VizRow {
   array: (number | string)[];
   /** имя → индекс (-1 = скрыть) */
   pointers: Record<PointerName, number>;
   highlight?: Partial<Record<HighlightKind, number[]>>;
+}
+
+export interface VizStep extends VizRow {
+  /** Подпись основного массива (например, nums1), если рядов два. */
+  label?: string;
+  /** Второй массив под основным: nums2 в Merge Sorted Array, res в брутфорсе Rotate Array. */
+  secondary?: VizRow & { label: string };
   vars?: Record<string, string | number>;
   note: string;
 }
@@ -55,6 +63,8 @@ export type Exercise =
       type: "order-lines";
       /** в правильном порядке, движок перемешивает */
       lines: string[];
+      /** Другие верные порядки (индексы строк lines), если независимые строки можно поменять местами. */
+      accept?: number[][];
       explanation: string;
     }
   | {

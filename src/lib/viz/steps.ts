@@ -1,7 +1,7 @@
-import type { HighlightKind, VizStep } from "@/lib/types";
+import type { HighlightKind, VizRow } from "@/lib/types";
 
 /** Указатели, стоящие на каждой ячейке (в порядке объявления). Скрытые (-1) пропускаем. */
-export function pointersByCell(step: VizStep): Map<number, string[]> {
+export function pointersByCell(step: VizRow): Map<number, string[]> {
   const cells = new Map<number, string[]>();
   for (const [name, index] of Object.entries(step.pointers)) {
     if (index < 0) continue;
@@ -19,7 +19,7 @@ export interface CellLook {
 // Если ячейка попала в несколько списков, важнее то, что произошло с ней на этом шаге.
 const FILL_PRIORITY = ["write", "compare", "skip"] as const;
 
-export function cellLook(step: VizStep, index: number): CellLook {
+export function cellLook(step: VizRow, index: number): CellLook {
   const fill = FILL_PRIORITY.find((kind) => step.highlight?.[kind]?.includes(index)) ?? null;
   return { fill, done: step.highlight?.done?.includes(index) ?? false };
 }

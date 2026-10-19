@@ -51,6 +51,21 @@ describe("content", () => {
     ).toThrow(/pointer "i"/);
   });
 
+  it("checks pointers in the secondary row too", () => {
+    expect(() =>
+      parseContent(
+        withExercise({
+          type: "visualize",
+          title: "t",
+          steps: [
+            { array: [1], pointers: {}, secondary: { label: "b", array: [1], pointers: { j: 0 } }, note: "ok" },
+            { array: [1], pointers: {}, secondary: { label: "b", array: [1], pointers: { j: 1 } }, note: "bad" },
+          ],
+        }),
+      ),
+    ).toThrow(/secondary pointer "j"/);
+  });
+
   it("requires order-lines indentation to follow the braces", () => {
     expect(() =>
       parseContent(

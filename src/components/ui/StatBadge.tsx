@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/cn";
 
 export type StatKind = "streak" | "xp" | "hearts";
@@ -36,18 +36,20 @@ export function StatBadge({ kind, value, muted = false, className }: StatBadgePr
       <span className={cn("text-xl", muted && "grayscale")} aria-hidden>
         {icon}
       </span>
+      {/*
+        Только анимация появления: новый key заново монтирует число.
+        Без exit-анимации — в скрытом маршруте (Activity) она замирает,
+        и старое число остаётся висеть рядом с новым.
+      */}
       <span className="relative inline-flex min-w-[1.5ch] overflow-hidden" aria-hidden>
-        <AnimatePresence mode="popLayout" initial={false}>
-          <motion.span
-            key={value ?? "empty"}
-            initial={{ y: -16, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 16, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 500, damping: 30 }}
-          >
-            {value ?? "–"}
-          </motion.span>
-        </AnimatePresence>
+        <motion.span
+          key={value ?? "empty"}
+          initial={{ y: -16, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+        >
+          {value ?? "–"}
+        </motion.span>
       </span>
     </div>
   );

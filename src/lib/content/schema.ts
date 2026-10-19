@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { indentLevels } from "@/lib/engine/order-lines";
-import type { Exercise, Island, Lesson, MascotState, VizStep } from "@/lib/types";
+import type { Exercise, Island, Lesson, MascotState, VizRow, VizStep } from "@/lib/types";
 
 const BLANK = "___";
 
@@ -18,29 +18,41 @@ const mascotStateSchema: z.ZodType<MascotState> = z.enum([
 
 const indexList = z.array(z.number().int().nonnegative());
 
+const rowShape = {
+  array: z.array(z.union([z.number(), z.string()])).min(1),
+  pointers: z.record(z.string(), z.number().int()),
+  highlight: z
+    .object({ compare: indexList, write: indexList, skip: indexList, done: indexList })
+    .partial()
+    .optional(),
+};
+
+/** Указатели и подсветка не выходят за границы ряда. */
+function checkRow(row: VizRow, ctx: z.RefinementCtx, where: string) {
+  const n = row.array.length;
+  for (const [name, index] of Object.entries(row.pointers)) {
+    if (index < -1 || index >= n) {
+      ctx.addIssue({ code: "custom", message: `${where}pointer "${name}" = ${index} is out of range` });
+    }
+  }
+  for (const [kind, indices] of Object.entries(row.highlight ?? {})) {
+    if (indices.some((i) => i >= n)) {
+      ctx.addIssue({ code: "custom", message: `${where}highlight.${kind} is out of range` });
+    }
+  }
+}
+
 const vizStepSchema: z.ZodType<VizStep> = z
   .object({
-    array: z.array(z.union([z.number(), z.string()])).min(1),
-    pointers: z.record(z.string(), z.number().int()),
-    highlight: z
-      .object({ compare: indexList, write: indexList, skip: indexList, done: indexList })
-      .partial()
-      .optional(),
+    ...rowShape,
+    label: text.optional(),
+    secondary: z.object({ ...rowShape, label: text }).optional(),
     vars: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
     note: text,
   })
   .superRefine((step, ctx) => {
-    const n = step.array.length;
-    for (const [name, index] of Object.entries(step.pointers)) {
-      if (index < -1 || index >= n) {
-        ctx.addIssue({ code: "custom", message: `pointer "${name}" = ${index} is out of range` });
-      }
-    }
-    for (const [kind, indices] of Object.entries(step.highlight ?? {})) {
-      if (indices.some((i) => i >= n)) {
-        ctx.addIssue({ code: "custom", message: `highlight.${kind} is out of range` });
-      }
-    }
+    checkRow(step, ctx, "");
+    if (step.secondary) checkRow(step.secondary, ctx, "secondary ");
   });
 
 /** 2–4 варианта без повторов и верный индекс в их пределах. */
@@ -107,8 +119,19 @@ const exerciseSchema: z.ZodType<Exercise> = z.discriminatedUnion("type", [
     .object({
       type: z.literal("order-lines"),
       lines: z.array(z.string().min(1)).min(2),
+      accept: z.array(z.array(z.number().int().nonnegative())).optional(),
       explanation: text,
     })
+    .refine(
+      (e) =>
+        (e.accept ?? []).every(
+          (order) =>
+            order.length === e.lines.length &&
+            [...order].sort((a, b) => a - b).every((v, i) => v === i) &&
+            order.some((v, i) => v !== i),
+        ),
+      { message: "accept must hold permutations of lines that differ from the main order" },
+    )
     // Движок пересчитывает отступы сам, поэтому в данных они должны совпадать со скобками.
     .refine(
       (e) => {

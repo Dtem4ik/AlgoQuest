@@ -77,11 +77,25 @@ export function CodeBlock({
  * Одна подсвеченная строка кода без обёртки <pre> — для строк-карточек и строк-кнопок.
  * Отступ рисуется отдельно, чтобы className (например, зачёркивание) касался только кода.
  */
-export function CodeLine({ code, className }: { code: string; className?: string }) {
+export function CodeLine({
+  code,
+  className,
+  wrap = false,
+}: {
+  code: string;
+  className?: string;
+  /** Переносить длинную строку вместо горизонтального скролла. */
+  wrap?: boolean;
+}) {
   const body = code.trimStart();
   const indent = code.slice(0, code.length - body.length);
   return (
-    <code className="font-mono whitespace-pre text-(--code-ink)">
+    <code
+      className={cn(
+        "font-mono text-(--code-ink)",
+        wrap ? "block pl-4 -indent-4 break-words whitespace-pre-wrap" : "whitespace-pre",
+      )}
+    >
       {indent}
       <Highlight code={body} language="javascript" theme={theme}>
         {({ tokens, getTokenProps }) => (

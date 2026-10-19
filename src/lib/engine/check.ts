@@ -33,7 +33,7 @@ export function checkAnswer(exercise: GradedExercise, answer: Answer): boolean {
     case "fill-blank":
       return answer.type === "option" && answer.index === exercise.correct;
     case "order-lines":
-      return answer.type === "order" && isCorrectOrder(exercise.lines, answer.order);
+      return answer.type === "order" && isCorrectOrder(exercise.lines, answer.order, exercise.accept);
     case "find-bug":
       return answer.type === "line" && answer.index === exercise.bugLine;
   }
@@ -42,6 +42,6 @@ export function checkAnswer(exercise: GradedExercise, answer: Answer): boolean {
 /** Ответ, с которого начинается упражнение: для order-lines это перемешанные строки. */
 export function initialAnswer(exercise: Exercise, random: () => number): Answer | null {
   return exercise.type === "order-lines"
-    ? { type: "order", order: shuffleOrder(exercise.lines, random) }
+    ? { type: "order", order: shuffleOrder(exercise.lines, random, exercise.accept) }
     : null;
 }
