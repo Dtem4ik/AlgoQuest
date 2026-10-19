@@ -97,6 +97,16 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Точечная сетка на фоне карты, к низу экрана сходит на нет. */
+.map-dots {
+  background-image: radial-gradient(
+    color-mix(in oklab, var(--primary) 22%, transparent) 1.5px,
+    transparent 1.5px
+  );
+  background-size: 24px 24px;
+  mask-image: linear-gradient(to bottom, black, transparent 85%);
+}
+
 /* В коде показываем `!==` и `=>` как есть: лигатуры путают новичков. */
 code,
 pre,

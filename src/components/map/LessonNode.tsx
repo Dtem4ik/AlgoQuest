@@ -93,14 +93,20 @@ export function LessonNode({ lesson, status, offset, open, onToggle, companion, 
           aria-expanded={open}
           aria-label={`${lesson.title}, ${status ? STATUS_LABELS[status] : "загрузка"}`}
           className={cn(
-            "relative flex size-[72px] items-center justify-center rounded-full",
-            "shadow-[0_6px_0_var(--ledge)] transition-[transform,box-shadow] duration-100",
-            "active:translate-y-1.5 active:shadow-none",
-            "focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-primary",
+            // Идеальный круг: объём — внутренним ободком снизу, а не подложкой под кругом,
+            // иначе кружок выглядит овалом. Белое кольцо и мягкая тень — как у монеты.
+            "relative flex size-[72px] items-center justify-center rounded-full ring-4 ring-surface",
+            "shadow-[inset_0_-6px_0_var(--ledge),0_8px_16px_-6px_rgb(31_27_58/0.35)]",
+            "transition-[transform,box-shadow] duration-100",
+            "active:translate-y-0.5 active:shadow-[inset_0_-2px_0_var(--ledge),0_4px_8px_-4px_rgb(31_27_58/0.35)]",
+            "focus-visible:outline-3 focus-visible:outline-offset-6 focus-visible:outline-primary",
             status ? STATUS_STYLES[status] : "animate-pulse bg-border [--ledge:var(--surface-shade)]",
           )}
         >
-          {status && <NodeIcon status={status} lesson={lesson} />}
+          {/* иконка чуть выше центра, чтобы компенсировать нижний ободок */}
+          <span className="-mt-1 flex items-center justify-center">
+            {status && <NodeIcon status={status} lesson={lesson} />}
+          </span>
         </button>
 
         {companion && (

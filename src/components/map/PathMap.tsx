@@ -1,19 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Mascot } from "@/components/mascot/Mascot";
 import { Card } from "@/components/ui/Card";
 import { useToday } from "@/hooks/useToday";
 import { isIslandCompleted, lessonStatuses } from "@/lib/engine/unlock";
 import { isStreakBroken } from "@/lib/progress/streak";
 import type { Island } from "@/lib/types";
+import { useLessonVisits } from "@/store/lesson-visits";
 import { useProgressHydrated, useProgressStore } from "@/store/progress";
 import { IslandHeader } from "./IslandHeader";
+import { IslandSparkles } from "./IslandSparkles";
 import { LessonNode } from "./LessonNode";
 import { LessonPopover } from "./LessonPopover";
+import { PathTrail, TRAIL_HEIGHT } from "./PathTrail";
 
 /** Извилистая дорожка: кружки по очереди уходят вправо и влево. */
 const OFFSETS = [0, 56, 0, -56];
+const NODE_SIZE = 72;
+// Сверху место под плашку «Старт» над первым кружком.
+const PAD_TOP = 60;
 
 interface UpcomingIsland {
   id: string;
@@ -31,6 +37,7 @@ export function PathMap({ islands, upcoming }: PathMapProps) {
   const today = useToday();
   const records = useProgressStore((s) => s.lessons);
   const streak = useProgressStore((s) => s.streak);
+  const startVisit = useLessonVisits((s) => s.startVisit);
   const [openId, setOpenId] = useState<string | null>(null);
 
   const statuses = hydrated ? lessonStatuses(islands, records) : null;
@@ -55,36 +62,73 @@ export function PathMap({ islands, upcoming }: PathMapProps) {
         const completed = hydrated
           ? island.lessons.filter((l) => records[l.id]?.completed).length
           : null;
+        const offsets = island.lessons.map(
+          (_, i) => OFFSETS[(firstIndex + i) % OFFSETS.length] ?? 0,
+        );
 
         return (
           <section key={island.id} className="space-y-10">
             <IslandHeader island={island} number={islandIndex + 1} completed={completed} />
 
-            <div className="flex flex-col items-center gap-8 pt-6">
-              {island.lessons.map((lesson, i) => {
-                const offset = OFFSETS[(firstIndex + i) % OFFSETS.length] ?? 0;
-                const status = statuses?.[lesson.id] ?? null;
-                return (
-                  <LessonNode
-                    key={lesson.id}
-                    lesson={lesson}
-                    status={status}
-                    offset={offset}
-                    open={openId === lesson.id}
-                    onToggle={() => setOpenId((id) => (id === lesson.id ? null : lesson.id))}
-                    companion={
-                      status === "available" ? (
-                        <Mascot state={sleepy ? "sleepy" : "idle"} size={64} />
-                      ) : undefined
-                    }
-                    popover={
-                      status && (
-                        <LessonPopover lesson={lesson} status={status} onStart={() => setOpenId(null)} />
-                      )
-                    }
-                  />
-                );
-              })}
+            {/* Подложка-остров в цвете паттерна: на ней тропинка и кружки уроков. */}
+            <div
+              className="relative rounded-[44px] px-2 pb-10"
+              style={{
+                paddingTop: PAD_TOP,
+                background: `color-mix(in oklab, ${island.color} 10%, var(--surface))`,
+                boxShadow: `inset 0 0 0 2px color-mix(in oklab, ${island.color} 20%, transparent), 0 6px 0 color-mix(in oklab, ${island.color} 14%, transparent)`,
+              }}
+            >
+              <IslandSparkles
+                color={island.color}
+                offsets={offsets}
+                rowHeight={NODE_SIZE + TRAIL_HEIGHT}
+                top={PAD_TOP}
+                skip={island.lessons.findIndex((l) => statuses?.[l.id] === "available")}
+              />
+              <div className="relative flex flex-col items-center">
+                {island.lessons.map((lesson, i) => {
+                  const offset = offsets[i] ?? 0;
+                  const next = offsets[i + 1];
+                  const status = statuses?.[lesson.id] ?? null;
+                  return (
+                    <Fragment key={lesson.id}>
+                      <LessonNode
+                        lesson={lesson}
+                        status={status}
+                        offset={offset}
+                        open={openId === lesson.id}
+                        onToggle={() => setOpenId((id) => (id === lesson.id ? null : lesson.id))}
+                        companion={
+                          status === "available" ? (
+                            <Mascot state={sleepy ? "sleepy" : "idle"} size={64} />
+                          ) : undefined
+                        }
+                        popover={
+                          status && (
+                            <LessonPopover
+                              lesson={lesson}
+                              status={status}
+                              onStart={() => {
+                                setOpenId(null);
+                                startVisit(lesson.id);
+                              }}
+                            />
+                          )
+                        }
+                      />
+                      {next !== undefined && (
+                        <PathTrail
+                          from={offset}
+                          to={next}
+                          walked={status === "completed" || status === "perfect"}
+                          color={island.color}
+                        />
+                      )}
+                    </Fragment>
+                  );
+                })}
+              </div>
             </div>
 
             {hydrated && isIslandCompleted(island, records) && (

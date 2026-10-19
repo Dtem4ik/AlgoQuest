@@ -23,8 +23,9 @@ src/app/                 маршруты; globals.css — токены темы
 src/components/ui/       Button (+ buttonClasses для Link), Card, ProgressBar, StatBadge, CodeBlock
 src/components/mascot/   Mascot (реакции тела, PNG/SVG), MascotSvg, available-png-states.ts
 src/components/ui/Dialog шторка-модалка (выход из урока)
-src/components/map/      TopBar, PathMap (дорожка), LessonNode, LessonPopover, IslandHeader
-src/components/lesson/   LessonScreen (гейт: гидрация, замок, runKey) → LessonRun (прогон урока),
+src/components/map/      TopBar, PathMap (остров-подложка + тропинка), LessonNode (круглые узлы), LessonPopover,
+                         IslandHeader, PathTrail, IslandSparkles, MapBackdrop (фон: пятна, точки, облака)
+src/components/lesson/   LessonScreen (гейт: гидрация, замок, номер захода) → LessonRun (прогон урока),
                          LessonHeader, LessonFooter (Проверить / плашка), ExerciseView (switch по type),
                          exercises/*, OutOfHearts, LessonSummary (+ конфетти), InterviewCard
 src/components/dev/      витрина /dev/ui
@@ -56,7 +57,7 @@ src/hooks/               useToday (день), useNow (часы раз в сек�
 
 - **Логика отдельно от UI.** Правила (сердечки, стрик, XP, движок урока) — чистые функции в `src/lib/**` с тестами. Store и компоненты только вызывают их.
 - **Время и случайность не трогаем при рендере.** Next с `cacheComponents` роняет пререндер на `new Date()`/`Date.now()` в рендере. Дату получаем через `useToday()`, `Date.now()` и `Math.random()` вызываем только в обработчиках событий и экшенах store.
-- **Activity.** Next с cacheComponents не размонтирует скрытые маршруты, а прячет их с сохранением состояния. Поэтому при уходе со страницы локальное состояние сбрасываем сами: `runKey` в LessonScreen, закрытие поповера в PathMap. На страницах, которые прячутся, не используем exit-анимации (`AnimatePresence`) для данных из store: в скрытом маршруте они замирают, и старое значение остаётся висеть рядом с новым (так было со StatBadge).
+- **Activity.** Next с cacheComponents не размонтирует скрытые маршруты, а прячет их с сохранением состояния. Поэтому состояние сбрасываем сами. Урок: новый прогон стартует **при входе** (кнопка «Начать» увеличивает номер захода в `store/lesson-visits.ts`), а не при уходе: иначе, пока грузится карта, мелькает урок с начала. Карту урок предзагружает (`router.prefetch("/")`). Поповер на карте закрываем при переходе. На страницах, которые прячутся, не используем exit-анимации (`AnimatePresence`) для данных из store: в скрытом маршруте они замирают, и старое значение остаётся висеть рядом с новым (так было со StatBadge).
 - **Обработчики передаём в JSX-пропсы напрямую.** Если положить колбэк в объект, React Compiler (`react-hooks/purity`) сочтёт, что он может вызываться при рендере, и запретит в нём `Date.now()`.
 - **Гидрация.** Данные из store показываем после `useProgressHydrated()`, до этого рендерим плейсхолдер (`StatBadge value={null}`).
 - **zod-схема только проверяет** (`refine`), но не трансформирует (`.trim()` и т.п. запрещены): иначе ломаются отступы в коде. Это закреплено тестом.

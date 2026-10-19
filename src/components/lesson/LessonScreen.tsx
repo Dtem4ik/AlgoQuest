@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Mascot } from "@/components/mascot/Mascot";
 import { buttonClasses } from "@/components/ui/Button";
 import type { Lesson } from "@/lib/types";
+import { useLessonVisits } from "@/store/lesson-visits";
 import { useProgressHydrated, useProgressStore } from "@/store/progress";
 import { LessonRun } from "./LessonRun";
 
@@ -19,8 +20,14 @@ export function LessonScreen({ lesson, prevLessonId }: LessonScreenProps) {
   const router = useRouter();
   const hydrated = useProgressHydrated();
   const unlocked = useProgressStore((s) => !prevLessonId || s.lessons[prevLessonId]?.completed === true);
-  // Смена ключа монтирует новый прогон урока с чистым состоянием.
-  const [runKey, setRunKey] = useState(0);
+  // Смена ключа монтирует новый прогон урока: при новом заходе с карты или «Повторить урок».
+  const visit = useLessonVisits((s) => s.visits[lesson.id] ?? 0);
+  const [retry, setRetry] = useState(0);
+
+  // Карта загружена заранее — уход из урока мгновенный, без «зависшего» экрана.
+  useEffect(() => {
+    router.prefetch("/");
+  }, [router]);
 
   if (!hydrated) {
     return <div className="flex-1" aria-busy="true" />;
@@ -43,15 +50,10 @@ export function LessonScreen({ lesson, prevLessonId }: LessonScreenProps) {
 
   return (
     <LessonRun
-      key={runKey}
+      key={`${visit}:${retry}`}
       lesson={lesson}
-      onRetry={() => setRunKey((k) => k + 1)}
-      onLeave={() => {
-        // Next сохраняет состояние скрытых маршрутов (Activity), поэтому
-        // сбрасываем прогон, чтобы при возвращении урок начался заново.
-        setRunKey((k) => k + 1);
-        router.push("/");
-      }}
+      onRetry={() => setRetry((r) => r + 1)}
+      onLeave={() => router.push("/")}
     />
   );
 }
