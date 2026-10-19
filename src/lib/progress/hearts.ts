@@ -1,5 +1,6 @@
 export const MAX_HEARTS = 5;
-export const HEART_REGEN_MS = 30 * 60 * 1000;
+export const HEART_REGEN_MINUTES = 5;
+export const HEART_REGEN_MS = HEART_REGEN_MINUTES * 60 * 1000;
 
 export interface HeartsState {
   hearts: number;
@@ -31,6 +32,11 @@ export function loseHeart(state: HeartsState, now: number): HeartsState {
     // Таймер восстановления стартует, когда теряем первое сердечко из полного запаса.
     heartsUpdatedAt: current.hearts === MAX_HEARTS ? now : current.heartsUpdatedAt,
   };
+}
+
+/** Полный запас; таймер восстановления не нужен. */
+export function refillHearts(now: number): HeartsState {
+  return { hearts: MAX_HEARTS, heartsUpdatedAt: now };
 }
 
 /** Сколько миллисекунд до следующего сердечка; null, если запас полный. */

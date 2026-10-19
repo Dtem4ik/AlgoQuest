@@ -4,6 +4,7 @@ import { Mascot } from "@/components/mascot/Mascot";
 import { Button } from "@/components/ui/Button";
 import { useHearts } from "@/hooks/useHearts";
 import { formatDuration } from "@/lib/format";
+import { HEART_REGEN_MINUTES } from "@/lib/progress/hearts";
 
 interface OutOfHeartsProps {
   onRetry: () => void;
@@ -21,7 +22,7 @@ export function OutOfHearts({ onRetry, onLeave }: OutOfHeartsProps) {
         <h1 className="text-3xl font-black">Отдохни</h1>
         <p className="text-lg font-semibold text-ink-muted">
           Сердечки закончились, а ошибки — нормальная часть обучения. Новое сердечко появляется
-          каждые 30 минут.
+          каждые {HEART_REGEN_MINUTES} минут.
         </p>
       </div>
 

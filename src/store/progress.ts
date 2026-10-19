@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { loseHeart, regenHearts } from "@/lib/progress/hearts";
+import { loseHeart, refillHearts, regenHearts } from "@/lib/progress/hearts";
 import {
   applyLessonResult,
   INITIAL_PROGRESS,
@@ -15,6 +15,8 @@ interface ProgressActions {
   /** Подтянуть восстановившиеся сердечки. */
   refreshHearts: (now?: number) => void;
   loseHeart: (now?: number) => void;
+  /** Полный запас сердечек (для разработки). */
+  refillHearts: (now?: number) => void;
   /** Записывает итог урока и возвращает начисленный XP. */
   completeLesson: (result: LessonResult, now?: Date) => number;
   reset: () => void;
@@ -41,6 +43,8 @@ export const useProgressStore = create<ProgressStore>()(
       refreshHearts: (now = Date.now()) => set(regenHearts(pickHearts(get()), now)),
 
       loseHeart: (now = Date.now()) => set(loseHeart(pickHearts(get()), now)),
+
+      refillHearts: (now = Date.now()) => set(refillHearts(now)),
 
       completeLesson: (result, now = new Date()) => {
         const { progress, xpEarned } = applyLessonResult(pickProgress(get()), result, now);

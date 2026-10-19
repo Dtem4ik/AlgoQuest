@@ -139,7 +139,7 @@ interface Island {
 ```ts
 interface Progress {
   xp: number;
-  hearts: number;            // максимум 5, +1 каждые 30 минут
+  hearts: number;            // максимум 5, +1 каждые 5 минут
   heartsUpdatedAt: number;
   streak: { current: number; best: number; lastDay: string }; // 'YYYY-MM-DD'
   activity: Record<string, number>;   // день → XP

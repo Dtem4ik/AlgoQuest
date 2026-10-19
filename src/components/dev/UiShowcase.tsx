@@ -9,6 +9,7 @@ import { CodeBlock } from "@/components/ui/CodeBlock";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatBadge } from "@/components/ui/StatBadge";
 import { MASCOT_LINES, pickMascotLine } from "@/content/mascot-lines";
+import { useHearts } from "@/hooks/useHearts";
 import { useToday } from "@/hooks/useToday";
 import { cn } from "@/lib/cn";
 import { displayedStreak } from "@/lib/progress/streak";
@@ -86,20 +87,21 @@ function StorePanel() {
   const hydrated = useProgressHydrated();
   const progress = useProgressStore();
   const today = useToday();
+  const hearts = useHearts();
 
   return (
     <Card className="space-y-4">
       <div className="flex items-center justify-between rounded-2xl bg-bg px-4 py-3">
         <StatBadge kind="streak" value={hydrated && today ? displayedStreak(progress.streak, today) : null} />
         <StatBadge kind="xp" value={hydrated ? progress.xp : null} />
-        <StatBadge kind="hearts" value={hydrated ? progress.hearts : null} />
+        <StatBadge kind="hearts" value={hearts?.hearts ?? null} />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <Button size="sm" variant="danger" onClick={() => progress.loseHeart()}>
           −1 ❤️
         </Button>
-        <Button size="sm" variant="secondary" onClick={() => progress.refreshHearts()}>
-          Обновить ❤️
+        <Button size="sm" variant="secondary" onClick={() => progress.refillHearts()}>
+          Восстановить сердечки
         </Button>
         <Button
           size="sm"

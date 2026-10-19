@@ -4,6 +4,7 @@ import {
   loseHeart,
   MAX_HEARTS,
   msUntilNextHeart,
+  refillHearts,
   regenHearts,
 } from "./hearts";
 
@@ -62,6 +63,12 @@ describe("loseHeart", () => {
 
   it("never goes below zero", () => {
     expect(loseHeart({ hearts: 0, heartsUpdatedAt: T0 }, T0 + 1).hearts).toBe(0);
+  });
+});
+
+describe("refillHearts", () => {
+  it("restores the full stock", () => {
+    expect(refillHearts(T0)).toEqual({ hearts: MAX_HEARTS, heartsUpdatedAt: T0 });
   });
 });
 
